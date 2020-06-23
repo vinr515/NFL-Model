@@ -2,15 +2,15 @@
 ## About
 This program predicts NFL games, as well as other things related to NFL games.
 #### Game
-Game.py has methods that have to do with NFL games during the game. It includes getting the data, and predicting. It uses regB. 
+Game.py has methods that have to do with NFL games during the game. It includes getting the data, and predicting. It uses IN_GAME. 
 #### Injury
 Injury.py has methods that have to do with getting injury data. It is not used to predict anything.
 #### nflPredict
 nflPredict.py has constants and other things like that. 
 #### Plays
-Plays.py has methods that have to do with finding the best play type for a certain play. It uses regH and regI
+Plays.py has methods that have to do with finding the best play type for a certain play. It uses PLAY_TYPE and YARDS_GAINED
 #### Prediction
-Prediction.py predicts games before they start, using team ratings and injuries. It uses regD.
+Prediction.py predicts games before they start, using team ratings and injuries. It uses RATING_AND_INJURY.
 #### Ratings
 Ratings.py has methods that read and write to the ratings file, and calculate the new ratings for teams after a game.
 #### Season
