@@ -1,5 +1,5 @@
 import Injury
-from nflPredict import regD, HFA_VALS
+from nflPredict import RATING_AND_INJURY, HFA_VALS
 
 class Prediction:
     """Predicts the score for all games included. gamesList is from
@@ -65,7 +65,7 @@ def predictAll(gameList):
     Use if the predictions haven't been found yet"""
     predictions = []
     inputData = [i[:-2] for i in gameList]
-    probs = list(regD.predict(inputData))
+    probs = list(RATING_AND_INJURY.predict(inputData))
     ###Subtract HFA because the predictions are done for the away team
     ###And percentages should add up to 100 (Home+HFA[1], Away-HFA[1])
     probs = [(i*100)-HFA_VALS[1] for i in probs]

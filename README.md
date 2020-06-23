@@ -77,3 +77,6 @@ The first model predicted a point margin, with a simple linear model.
  - [ ] Create a model that predicts how good a game is going to be (using attendance, or tv ratings)
    - It would take in team ratings, the week/playoff round, and other things
  - [ ] Use Season to Season roster changes to change team ratings
+ - [ ] Make a model that's better at predicting the season at the start of the season
+   - The model used now works better later in the season. 
+   - At the start of the season, it's based more on strength of schedule

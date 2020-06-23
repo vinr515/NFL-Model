@@ -1,5 +1,5 @@
 import Ratings, Train
-from nflPredict import (getLoser, SIM_NUM, regE, HFA_VALS, DIVISIONS, AFC, NFC)
+from nflPredict import (getLoser, SIM_NUM, RATING_ONLY, HFA_VALS, DIVISIONS, AFC, NFC)
 import random
 
 class Season:
@@ -219,12 +219,12 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
 
     def _predictRating(self, games):
         """Uses Season._randomWinner() to predict the winner of games based only on rating"""
-        ###Turn each game into a list that can go into reg E
+        ###Turn each game into a list that can go into RATING_ONLY
         ###games are [away, home], so this is done from the Home's Point of View
         rates = [[self.allRate[i[1]]-self.allRate[i[0]], self.seasRate[i[1]]-self.allRate[i[1]]]
                  for i in games]
         ###Predict, and add HFA, since it's from Home's POV
-        allProbs = list(regE.predict_proba(rates)[:, 1])
+        allProbs = list(RATING_ONLY.predict_proba(rates)[:, 1])
         allProbs = [(i*100)+HFA_VALS[0] for i in allProbs]
         ###Add HFA
         ###Use a random number to find the winner
@@ -293,7 +293,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###Home's Point of View
         allDiff = (self.allRate[home] - self.allRate[away])
         seasDiff = (self.seasRate[home] - self.seasRate[away])
-        percent = regE.predict_proba([[allDiff, seasDiff]])[0][1]*100
+        percent = RATING_ONLY.predict_proba([[allDiff, seasDiff]])[0][1]*100
         percent = round(percent, 1)
         if(homeField): percent += HFA_VALS[0]
         ###Winner loser depending on whether percent < or > 50%

@@ -21,7 +21,7 @@ def findScore(roster, starters):
     
     ###This adds the position for every player whose name isn't in
     ###The list of starter names
-    injuries = [i[0] for i in roster if not(realName(i[1]) in starterName)] ###Make the position one used by reg D
+    injuries = [i[0] for i in roster if not(realName(i[1]) in starterName)] ###Make the position one used by RATING_AND_INJURY
     for i in range(len(injuries)):
         if(injuries[i] in POS_CONVERT):
             injuries[i] = POS_CONVERT[injuries[i]]

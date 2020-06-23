@@ -1,4 +1,4 @@
-from nflPredict import openWebsite, getLoser, regB, TEAM_ABBRS
+from nflPredict import openWebsite, getLoser, IN_GAME, TEAM_ABBRS
 
 def combineDrives(awayDrives, homeDrives):
     """Combines away team's drives and home team's drives, and sorts by start time
@@ -202,7 +202,7 @@ If xy=True, it returns a list of (seconds left, % chance) pairs"""
         newData.append(line)
         indexes.append(i)
 
-    vals = list(regB.predict_proba(newData)[:, 1])
+    vals = list(IN_GAME.predict_proba(newData)[:, 1])
     finalList = []
     for i in range(len(vals)):
         ###indexes[i] is the index of the data point used

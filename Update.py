@@ -38,7 +38,7 @@ def findSevereScores(injs):
     score = [0 for i in range(12)]
     for i in injs:
         newPos = i[0]
-        ###Convert position to what's in regD, get number for the injury
+        ###Convert position to what's in RATING_AND_INJURY, get number for the injury
         if(newPos in POS_CONVERT): newPos = POS_CONVERT[newPos]
         thisScore = severeScore[i[2].lower()]
 
@@ -73,7 +73,7 @@ def getSevere(injuries, teamName):
 def getSevereScore(soup, awayAbbr, homeAbbr):
     awayInj = soup.find("div", attrs={"id":"all_{}_current_injuries".format(awayAbbr)})
     homeInj = soup.find("div", attrs={"id":"all_{}_current_injuries".format(homeAbbr)})
-    ###Get the actual number and the difference to put in regD
+    ###Get the actual number and the difference to put in RATING_AND_INJURY
     awayScore, homeScore = getSevere(awayInj, i[0]), getSevere(homeInj, i[1])
     diffScore = Injury.subtract(awayScore, homeScore)
 
@@ -111,8 +111,8 @@ teamChances is a list where each element is: [name, [all chances in a list]]"""
     return string
 
 def predict(inputData):
-    """Returns a list of predictions. inputData is a list of lists to put in regD"""
-    probs = list(regD.predict(inputData))
+    """Returns a list of predictions. inputData is a list of lists to put in RATING_AND_INJURY"""
+    probs = list(RATING_AND_INJURY.predict(inputData))
     probs = [round(i*100, 1) for i in probs]
     for i in range(len(probs)):
         if(probs < 50):

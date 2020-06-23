@@ -29,12 +29,12 @@ RATING_DAMP = 20
 
 ###New Machine Learning:
 with open('Regression_Models.pkl', 'rb') as f:
-    regE, regD, regB, regF, regG, regH, regI = pickle.load(f)
+    RATING_ONLY, RATING_AND_INJURY, IN_GAME, PLAY_TYPE, YARDS_GAINED = pickle.load(f)
 
-REG_H_OUT_KEY = ['Field Goal', 'Kickoff', 'Kneel', 'PAT', 'Pass', 'Punt', 'Run',
+PLAY_TYPE_OUT_KEY = ['Field Goal', 'Kickoff', 'Kneel', 'PAT', 'Pass', 'Punt', 'Run',
                  'Two Point Attempt']
 
-### %increase for the home team for regE and regD
+### %increase for the home team for RATING_ONLY and RATING_AND_INJURY
 ### Also a % decrease for away team
 HFA_VALS = [2, 2.5]
 
