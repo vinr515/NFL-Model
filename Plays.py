@@ -1,5 +1,6 @@
 import Game
-from nflPredict import openWebsite
+import nflPredict as Base
+Comment = Base.Comment
 
 FINAL_DATA_HEAD = ['Home/Away', 'Seconds', 'Down', 'To Go', 'Yard', 'Play Type',
                    'Away Score', 'Home Score', 'Penalty', 'Yards', 'Points']
@@ -22,7 +23,8 @@ def addScore(finalData):
 
 def baseDrives(soupObj, awayAbbr, homeAbbr):
     """Returns all drives in the game, after chaning the time to seconds passed"""
-    awayDrives, homeDrives = nflGame.getDrives(soup=soupObj)
+    awayDrives, homeDrives = Game.getDriveBase(soup=soupObj)
+    awayDrives, homeDrives = Game.getDrives(awayDrives), Game.getDrives(homeDrives)
     allDrives = []
     awayDrives = changeDriveYard(awayDrives, awayAbbr, homeAbbr)
     homeDrives = changeDriveYard(homeDrives, homeAbbr, awayAbbr)
@@ -243,7 +245,7 @@ def getAllPlays(tags):
     return entireGame
 
 def getComment(url):
-    soup = openWebsite(url)
+    soup = Base.openWebsite(url)
     ###The play by play is in a comment under the <div id='all_pbp'> tag
     findComment = lambda text:isinstance(text, Comment)
     playByPlay = soup.find('div', attrs={'id':'all_pbp'})

@@ -1,4 +1,4 @@
-from nflPredict import openWebsite
+import nflPredict as Base
 
 def getFuture(tableRow):
     """Returns a (away, home, website) tuple, when you don't want the result"""
@@ -49,7 +49,7 @@ def getGame(tableRow):
 def getWeek(year, week, future=False):
     """Returns the week in that year The tuples are (winner, loser, home, points)"""
     url = "https://www.pro-football-reference.com/years/" + str(year) + "/games.htm"
-    soup = openWebsite(url)
+    soup = Base.openWebsite(url)
 
     games = []
     ###Each row (tr tag) is a different game
@@ -69,7 +69,7 @@ def getYear(year, future=False):
 because this opens one website while that opens 21"""
     games = {}
     url = "https://www.pro-football-reference.com/years/{}/games.htm".format(str(year))
-    soup = openWebsite(url)
+    soup = Base.openWebsite(url)
     row = soup.find_all("tr")
 
     for i in row:

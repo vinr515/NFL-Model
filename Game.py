@@ -1,4 +1,4 @@
-from nflPredict import openWebsite, getLoser, IN_GAME, TEAM_ABBRS
+import nflPredict as Base
 
 def combineDrives(awayDrives, homeDrives):
     """Combines away team's drives and home team's drives, and sorts by start time
@@ -89,7 +89,7 @@ and points scored"""
 
 def findScores(gameCode):
     """Finds all scoring plays from a game"""
-    soup = openWebsite("https://www.pro-football-reference.com"+gameCode)
+    soup = Base.openWebsite("https://www.pro-football-reference.com"+gameCode)
     ###awayScore and homeScore are for the actual scores
     awayScore = soup.find_all(attrs={"data-stat":"vis_team_score"})[1:]
     homeScore = soup.find_all(attrs={"data-stat":"home_team_score"})[1:]
@@ -139,13 +139,12 @@ def getAllData(gameCode, awayAbr, homeAbr, homeWin):
 def getDriveBase(gameCode=None, soup=None):
     """Gets the base HTML that has the drives, from pro football reference"""
     if(not(soup)):
-        soup = openWebsite("https://www.pro-football-reference.com"+gameCode)
-    ###Create a soup object if it isn't given
-    if(not(soup)):
-        soup = openWebsite("https://www.pro-football-reference.com"+gameCode)
+        soup = Base.openWebsite("https://www.pro-football-reference.com"+gameCode)
     ###The drives are found in a comment under a <div id="all_vis_drives"> tag
     awayDrives = soup.find(attrs={"id":"all_vis_drives"})
     homeDrives = soup.find(attrs={"id":"all_home_drives"})
+
+    #return awayDrives, homeDrives
     
 
 def getDrives(drives):
@@ -179,9 +178,9 @@ seasRating is a Season Ratings dictionary
 If xy=True, it returns a list of (seconds left, % chance) pairs"""
     if(len(game) == 3): away, home = game[0], game[1]
     elif(len(game) == 5):
-        away, home = game[2], getLoser(game[2], [game[1], game[0]])
+        away, home = game[2], Base.getLoser(game[2], [game[1], game[0]])
 
-    awayAbbr, homeAbbr = TEAM_ABBRS[away].upper(), TEAM_ABBRS[home].upper()
+    awayAbbr, homeAbbr = Base.TEAM_ABBRS[away].upper(), Base.TEAM_ABBRS[home].upper()
     ###Home wins is used as the y for training
     data = getAllData(game[-1], awayAbbr, homeAbbr, 0)
 
@@ -202,7 +201,7 @@ If xy=True, it returns a list of (seconds left, % chance) pairs"""
         newData.append(line)
         indexes.append(i)
 
-    vals = list(IN_GAME.predict_proba(newData)[:, 1])
+    vals = list(Base.IN_GAME.predict_proba(newData)[:, 1])
     finalList = []
     for i in range(len(vals)):
         ###indexes[i] is the index of the data point used

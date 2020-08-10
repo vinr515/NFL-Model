@@ -1,4 +1,4 @@
-from nflPredict import RATING_DAMP, START_YEAR
+import nflPredict as Base
 """
 y = (2/2**x)+1 for x > 0,
 y = -x + 2 for x <= 0.
@@ -9,8 +9,10 @@ better team doesn't move you too much. Beating by 7 is beating next team
 Divided by 20 so one game doesn't affect that much.
 """
 
-def adjustRating(old, difference, points):
+def adjustRating(old, difference, points, t=False):
     """Returns what the new rating should be for one game/team"""
+    if(t):
+        print(Base.RATING_DAMP)
     pointsAdjust = points**2/49
     ###You subtract points djust, since a lower x is a higher y, so worse loss
     ###Means less rating, better win means more rating
@@ -20,7 +22,7 @@ def adjustRating(old, difference, points):
         newRating = (2/2**(difference)) + 1
     else:
         newRating = -difference + 3
-    newRating /= RATING_DAMP
+    newRating /= Base.RATING_DAMP
 
     if(points < 0):
         return old - newRating
@@ -60,7 +62,7 @@ def getOldRatings(year):
 
     order = pastRatings[0].split(',')[1:]
     pastRatings = pastRatings[1:]
-    index = year-START_YEAR
+    index = year-Base.START_YEAR
     line = pastRatings[index].split(',')[1:]
 
     newRate, newSeas = {}, {}

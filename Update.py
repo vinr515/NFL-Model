@@ -1,14 +1,15 @@
 import Prediction, Ratings, Train, Injury, Season, Game, Plays
-from nflPredict import *
+from bs4 import Comment
+import nflPredict as Base
 
 def divisionWinners(teamData):
     ###Find division winners (not sorted by chance)
     afcTeams, nfcTeams = [], []
-    for i in DIVISIONS:
+    for i in Base.DIVISIONS:
         dataSet = [teamData[j] for j in i]
         ###Take the winner. 
         winner = max(dataSet, key=lambda x:x[1][-1])
-        if(winner[0] in AFC):
+        if(winner[0] in Base.AFC):
             afcTeams.append(winner)
         else:
             nfcTeams.append(winner)
@@ -21,13 +22,13 @@ def findData(weekGames):
     for i in weekGames:
         print(".", end='')
         url = "https://www.pro-football-reference.com" + i[2]
-        soup = openWebsite(url)
+        soup = Base.openWebsite(url)
         ###Get the injuries
-        awayAbbr, homeAbbr = TEAM_ABBRS[i[0]], TEAM_ABBRS[i[1]]
+        awayAbbr, homeAbbr = Base.TEAM_ABBRS[i[0]], Base.TEAM_ABBRS[i[1]]
         diffScore = getSevereScore(soup, awayAbbr, homeAbbr)
         
-        rateDiff = TEAM_RATINGS[i[0]] - TEAM_RATINGS[i[1]]
-        seasDiff = SEASON_RATINGS[i[0]] - SEASON_RATINGS[i[1]]
+        rateDiff = Base.TEAM_RATINGS[i[0]] - Base.TEAM_RATINGS[i[1]]
+        seasDiff = Base.SEASON_RATINGS[i[0]] - Base.SEASON_RATINGS[i[1]]
         ###Add to input list
         line = [rateDiff, seasDiff]; line.extend(diffScore)
         inputData.append(line)
@@ -39,11 +40,11 @@ def findSevereScores(injs):
     for i in injs:
         newPos = i[0]
         ###Convert position to what's in RATING_AND_INJURY, get number for the injury
-        if(newPos in POS_CONVERT): newPos = POS_CONVERT[newPos]
+        if(newPos in Base.POS_CONVERT): newPos = Base.POS_CONVERT[newPos]
         thisScore = severeScore[i[2].lower()]
 
-        if(newPos in POS_ORDER):
-            score[POS_ORDER.index(newPos)] += thisScore
+        if(newPos in Base.POS_ORDER):
+            score[Base.POS_ORDER.index(newPos)] += thisScore
             
         if(not(newPos in POS_ORDER) and newPos.lower() != 'k' and newPos.lower() != 'p'):
             print(newPos, 'getSevere')
@@ -112,7 +113,7 @@ teamChances is a list where each element is: [name, [all chances in a list]]"""
 
 def predict(inputData):
     """Returns a list of predictions. inputData is a list of lists to put in RATING_AND_INJURY"""
-    probs = list(RATING_AND_INJURY.predict(inputData))
+    probs = list(Base.RATING_AND_INJURY.predict(inputData))
     probs = [round(i*100, 1) for i in probs]
     for i in range(len(probs)):
         if(probs < 50):
@@ -180,19 +181,18 @@ def update(weekNum, year, prevWins):
     """Updates Team Ratings, Playoff Predictions, etc.
 Week Num is the last week played
 prevWins is a dictionary of last weeks win count for each team"""
-    global TEAM_RATINGS, SEASON_RATINGS
         
     nextWeek = getWeek(year, weekNum)
     ###Step 2: Find Power Rankings
-    oldRate, oldSeas  = TEAM_RATINGS.copy(), SEASON_RATINGS.copy()
+    oldRate, oldSeas  = Base.TEAM_RATINGS.copy(), Base.SEASON_RATINGS.copy()
 
     if(weekNum <= 17): ###Team Ratings aren't changed in the playoffs, only Season Ratings
-        TEAM_RATINGS = Ratings.changeWeekRatings(lastWeek, TEAM_RATINGS)
-    SEASON_RATINGS = Ratings.changeWeekRatings(lastWeek, SEASON_RATINGS)
+        Base.TEAM_RATINGS = Ratings.changeWeekRatings(lastWeek, Base.TEAM_RATINGS)
+    Base.SEASON_RATINGS = Ratings.changeWeekRatings(lastWeek, Base.SEASON_RATINGS)
 
     ###Step 4: Change Power Ranking Change Numbers
-    RATE_CHANGE = Ratings.getChange(oldRate, TEAM_RATINGS)
-    SEAS_CHANGE = Ratings.getChange(oldSeas, SEASON_RATINGS)
+    RATE_CHANGE = Ratings.getChange(oldRate, Base.TEAM_RATINGS)
+    SEAS_CHANGE = Ratings.getChange(oldSeas, Base.SEASON_RATINGS)
 
     ###Step 5: Data
     newString = findData(nextWeek)
@@ -215,7 +215,7 @@ prevWins is a dictionary of last weeks win count for each team"""
 
     ###Step 11:
     print("Writing Ratings  ")
-    Ratings.writeRatings(TEAM_RATINGS, SEASON_RATINGS)
+    Ratings.writeRatings(Base.TEAM_RATINGS, Base.SEASON_RATINGS)
 
 def updateWins(winDict, lastWeek):
     copyDict = winDict.copy()

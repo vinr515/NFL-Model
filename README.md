@@ -2,15 +2,15 @@
 ## About
 This program predicts NFL games, as well as other things related to NFL games.
 #### Game
-Game.py has methods that have to do with NFL games during the game. It includes getting the data, and predicting. It uses regB. 
+Game.py has methods that have to do with NFL games during the game. It includes getting the data, and predicting. It uses IN_GAME. 
 #### Injury
 Injury.py has methods that have to do with getting injury data. It is not used to predict anything.
 #### nflPredict
 nflPredict.py has constants and other things like that. 
 #### Plays
-Plays.py has methods that have to do with finding the best play type for a certain play. It uses regH and regI
+Plays.py has methods that have to do with finding the best play type for a certain play. It uses PLAY_TYPE and YARDS_GAINED
 #### Prediction
-Prediction.py predicts games before they start, using team ratings and injuries. It uses regD.
+Prediction.py predicts games before they start, using team ratings and injuries. It uses RATING_AND_INJURY.
 #### Ratings
 Ratings.py has methods that read and write to the ratings file, and calculate the new ratings for teams after a game.
 #### Season
@@ -26,32 +26,33 @@ Running Update.py gives you access to all other files. Otherwise you will need t
 
 ## Regression_Models.pkl
 There are 5 models in the Regression_Models.pkl
-#### regE 
+PLAY_TYPE, YARDS_GAINED
+#### RATING_ONLY 
 * Inputs: All-Time Difference,Season Difference 
 * Outputs: Win/Loss (and `.predict_proba` to get win percentage)
 * Neural Network (MLP Classifier)   
 * ~66% accurate
 
-#### regD:
+#### RATING_AND_INJURY:
 * Inputs: All-Time Difference, Season Difference, Difference of injury for each position
 * Outputs: Win Percentage
 * Injuries used are: QB, RB, WR, TE, T, G, C, DT, DE, LB, CB, S
 * Bayesian Ridge Regression  
 * ~67.5% accurate
 
-#### regB:
+#### IN_GAME:
 * Inputs: All-Time Difference, Season Difference, Seconds Left, Start Yard, Point Difference
 * Outputs: Win/Lose, (and `.predict_proba` for percent chance)
 * Seconds Left starts at 3600 and goes to 0 (and negative in overtime)
 *  Network (MLP Classifier)
 
-#### regH:
+#### PLAY_TYPE:
 * Inputs: Home/Away, Down, To Go, Yard, Away Points, Home Points
 * Outputs: Finds best play type for the next play (as in most realistic)
 * Neural Network (MLP Classifier) 
 * ~70% accurate (70% of the time it chose the play type that was actually chosen, not necessarily the best one)
 
-#### regI:
+#### YARDS_GAINED:
 * Inputs: Seconds Passed, Down, To Go, Yard, Team Score, Opp. Score, Pass?, Run?, FG?, PAT?, 2PT?
 * Outpts: Finds Yards Gained and Points Gained
 * Pass, Run, FG, PAT, 2PT give the play type. One of them is 1, the others are 0

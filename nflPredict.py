@@ -3,6 +3,7 @@
 ###HFA = Home Field Advantage
 
 ###Machine Learning imports
+"""
 if(input("Import matplotlib? (n to not import)  ").lower() != "n"):
     import matplotlib.pyplot as plt
 if(input("Import numpy?  ").lower() != "n"):
@@ -10,13 +11,23 @@ if(input("Import numpy?  ").lower() != "n"):
 if(input("Import sklearn?  ").lower() != "n"):
     from sklearn import linear_model as linear
     from sklearn.neural_network import MLPClassifier
-    
+"""
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+import matplotlib.pyplot as plt
+import numpy
+from sklearn import linear_model as linear
+from sklearn.neural_network import MLPClassifier
 print("ML imports imported. ")
 ###To access webpages for NFL info
 from bs4 import BeautifulSoup, Comment
 import urllib.request
 import random
 import pickle
+import urllib3
+import requests
+urllib3.disable_warnings()
 
 ###Numbers of times to sim season for season predictions
 SIM_NUM = 2000
@@ -41,7 +52,7 @@ HFA_VALS = [2, 2.5]
 ###Some uncommon positions are counted as other ones. (NTs are rare, so they're counted as DTs)
 ###This converts. OL is T because G matters less and C matters more, so T is in the middle
 POS_CONVERT = {"FB":"RB", "OL":"T", "DL":"DT", "NT":"DT", "DB":"CB", "SS":"S",
-               "FS":"S"}
+               "FS":"S", 'RG':'G', 'RT':'T', 'LG':'G', 'LT':'T'}
 POS_ORDER = ['QB', 'RB', 'WR', 'TE', 'T', 'G', 'C', 'DT', 'DE', 'LB', 'CB', 'S']
 
 severeScore = {'probable': 0.25, 'questionable': 0.5, 'out': 1,
@@ -84,15 +95,37 @@ def getName(total):
 (Returns "Rams" for "Los Angeles Rams")"""
     return total.split(" ")[-1]
 
-    
 def openWebsite(url):
+    errorMessages = []
+    for i in [reqOpen, libOpen, lib3Open]:
+        try:
+            soup = i(url)
+            return soup
+        except Exception as e:
+            errorMessages.append(str(e))
+            continue
+        
+    raise ValueError("Website Not Found: ", ' AND '.join(errorMessages))
+    
+def reqOpen(url):
+    r = requests.get(url).text
+    return BeautifulSoup(r, "html.parser")
+
+def libOpen(url, errorText=''):
     """Opens the url website, and returns a soup object"""
     hdr = {"User-Agent":"Mozilla/5.0"}
 
     req = urllib.request.Request(url, headers=hdr)
     r = urllib.request.urlopen(req)
-    r_tags = r.read().decode('utf-8')
+    r_tags = r.read()
+    r_tags = r_tags.decode('utf-8')
     return BeautifulSoup(r_tags, "html.parser")
+
+def lib3Open(url):
+    http = urllib3.PoolManager()
+    r_tags = http.request("GET", url).data.decode('utf-8')
+    soup = BeautifulSoup(r_tags, "html.parser")
+    return soup
 
 def getGameYear(gameCode):
     """Returns the year the game was with the gamecode"""
@@ -124,3 +157,6 @@ TEAM_RATINGS, SEASON_RATINGS = teams[0], teams[1]
 DIVISIONS, AFC, NFC = getDivisions(teams[2])
 TEAM_ABBRS = teams[3]
 RATE_CHANGE, SEAS_CHANGE = teams[4], teams[5]
+
+warnings.simplefilter(action='default', category=UserWarning)
+warnings.simplefilter(action='default', category=FutureWarning)

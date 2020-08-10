@@ -1,5 +1,5 @@
 import Ratings, Train
-from nflPredict import (getLoser, SIM_NUM, RATING_ONLY, HFA_VALS, DIVISIONS, AFC, NFC)
+import nflPredict as Base
 import random
 
 class Season:
@@ -56,7 +56,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
                 self.leagueSched.extend(afcSched[2:4]); self.leagueSched.extend(nfcSched[2:4])
                 self.leagueSched.append(afcSched[4]); self.leagueSched.append(nfcSched[4])
                 sbChamp = self._sim(afcChamp, nfcChamp, homeField=False)
-                sbLose = getLoser(sbChamp, [afcChamp, nfcChamp])
+                sbLose = Base.getLoser(sbChamp, [afcChamp, nfcChamp])
                 self.leagueSched.append([sbChamp, sbLose])
                 i += 1
             return self.leagueSched
@@ -65,7 +65,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
             seeds = self.searchFor["playoffs"]
             if(self.sixTeam): afcSeeds, nfcSeeds = seeds[:6], seeds[6:]
             else: afcSeeds, nfcSeeds = seeds[:7], seeds[7:]
-            for i in range(SIM_NUM):
+            for i in range(Base.SIM_NUM):
                 if(i%100 == 0):
                     print(i, end=' ')
                 afcChamp = self._toSB(afcSeeds)
@@ -78,10 +78,10 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
             for i in range(len(afcSeeds)):
                 ###All of these teams were in the playoffs
                 if(i <= 3):
-                    self.wonDiv[afcSeeds[i]] = SIM_NUM
-                    self.wonDiv[nfcSeeds[i]] = SIM_NUM
-                self.inPlay[afcSeeds[i]] = SIM_NUM
-                self.inPlay[nfcSeeds[i]] = SIM_NUM
+                    self.wonDiv[afcSeeds[i]] = Base.SIM_NUM
+                    self.wonDiv[nfcSeeds[i]] = Base.SIM_NUM
+                self.inPlay[afcSeeds[i]] = Base.SIM_NUM
+                self.inPlay[nfcSeeds[i]] = Base.SIM_NUM
                 
             return
 
@@ -89,11 +89,11 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         """Returns a list, with each teams chances, as integers"""
         data = []
         for i in sorted(self.allRate):
-            won = round(self.champ[i]/(SIM_NUM/100), 1)
-            confWon = round(self.inSB[i]/(SIM_NUM/100), 1)
-            divWon = round(self.wonDiv[i]/(SIM_NUM/100), 1)
-            post = round(self.inPlay[i]/(SIM_NUM/100), 1)
-            numWin = round(self.winAvg[i]/SIM_NUM, 1)
+            won = round(self.champ[i]/(Base.SIM_NUM/100), 1)
+            confWon = round(self.inSB[i]/(Base.SIM_NUM/100), 1)
+            divWon = round(self.wonDiv[i]/(Base.SIM_NUM/100), 1)
+            post = round(self.inPlay[i]/(Base.SIM_NUM/100), 1)
+            numWin = round(self.winAvg[i]/Base.SIM_NUM, 1)
             data.append([i, won, confWon, divWon, post, numWin])
 
         return data
@@ -102,8 +102,8 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         """Gets the data as a list of lists"""
         sched = self._splitWeek(sched)
         ###Get afc, nfc seeds (sched[-1] is the playoffs, sched[-1][-1] is the SB)
-        afc = [i for i in sched[-1][:-1] if i[0] in AFC]
-        nfc = [i for i in sched[-1][:-1] if i[0] in NFC]
+        afc = [i for i in sched[-1][:-1] if i[0] in Base.AFC]
+        nfc = [i for i in sched[-1][:-1] if i[0] in Base.NFC]
 
         ###Get all teams that played
         afcSeeds, nfcSeeds = [i[0] for i in afc], [i[0] for i in nfc]
@@ -150,12 +150,12 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         print("%-21s %8s %8s %8s %8s %8s" % ("Team Name", "Won SB", "Made SB", "Won Div.", "Made Post.", "Avg Wins"))
         for i in sorted(self.allRate):
             ###This only sorts the keys, so we get all the teams sorted by name
-            winSB = str(round(self.champ[i]/(SIM_NUM/100), 1)) + "%"
-            madeSB = str(round(self.inSB[i]/(SIM_NUM/100), 1)) + "%"
-            divWin = str(round(self.wonDiv[i]/(SIM_NUM/100), 1)) + "%"
-            madePlay = str(round(self.inPlay[i]/(SIM_NUM/100), 1)) + "%"
+            winSB = str(round(self.champ[i]/(Base.SIM_NUM/100), 1)) + "%"
+            madeSB = str(round(self.inSB[i]/(Base.SIM_NUM/100), 1)) + "%"
+            divWin = str(round(self.wonDiv[i]/(Base.SIM_NUM/100), 1)) + "%"
+            madePlay = str(round(self.inPlay[i]/(Base.SIM_NUM/100), 1)) + "%"
             ###This one isn't a percent, so divide by 2,000
-            wins = str(round(self.winAvg[i]/SIM_NUM, 1))
+            wins = str(round(self.winAvg[i]/Base.SIM_NUM, 1))
             print("%-21s %8s %8s %8s %8s %8s" % (i, winSB, madeSB, divWin, madePlay, wins))
 
     def outputSched(self, sched):
@@ -170,8 +170,8 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
 
         ###Output post season. First find the seeds
         ###Split into afc and nfc playoffs, without super bowl
-        afc = [i for i in sched[-1][:-1] if i[0] in AFC]
-        nfc = [i for i in sched[-1][:-1] if i[0] in NFC]
+        afc = [i for i in sched[-1][:-1] if i[0] in Base.AFC]
+        nfc = [i for i in sched[-1][:-1] if i[0] in Base.NFC]
 
         ###Get all teams that played
         afcSeeds, nfcSeeds = [i[0] for i in afc], [i[0] for i in nfc]
@@ -224,8 +224,8 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         rates = [[self.allRate[i[1]]-self.allRate[i[0]], self.seasRate[i[1]]-self.allRate[i[1]]]
                  for i in games]
         ###Predict, and add HFA, since it's from Home's POV
-        allProbs = list(RATING_ONLY.predict_proba(rates)[:, 1])
-        allProbs = [(i*100)+HFA_VALS[0] for i in allProbs]
+        allProbs = list(Base.RATING_ONLY.predict_proba(rates)[:, 1])
+        allProbs = [(i*100)+Base.HFA_VALS[0] for i in allProbs]
         ###Add HFA
         ###Use a random number to find the winner
         rands = [(random.randint(1, 100)) for i in range(len(games))]
@@ -240,7 +240,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
 
     def predictSeason(self):
         """Runs the _simSeason() 2000 times, and updates the season end stats"""
-        for i in range(SIM_NUM):
+        for i in range(Base.SIM_NUM):
             ###The numbers show how much longer it takes
             if(i%100 == 0):
                 print(i, end=' ')
@@ -293,9 +293,9 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###Home's Point of View
         allDiff = (self.allRate[home] - self.allRate[away])
         seasDiff = (self.seasRate[home] - self.seasRate[away])
-        percent = RATING_ONLY.predict_proba([[allDiff, seasDiff]])[0][1]*100
+        percent = Base.RATING_ONLY.predict_proba([[allDiff, seasDiff]])[0][1]*100
         percent = round(percent, 1)
-        if(homeField): percent += HFA_VALS[0]
+        if(homeField): percent += Base.HFA_VALS[0]
         ###Winner loser depending on whether percent < or > 50%
         winList = [randomWinner(home, away, percent)[0] for i in range(num)]
         winner = max([home, away], key=lambda x:winList.count(x))
@@ -363,15 +363,15 @@ sched = True"""
         divRound.append(self._sim(playoff[3], playoff[4], num=1))
 
         if(not(self.sixTeam)):
-            moreLose = getLoser(divRound[1], [playoff[1], playoff[6]])
+            moreLose = Base.getLoser(divRound[1], [playoff[1], playoff[6]])
             ###Add seed to the team name. 
             winName = str(playoff.index(divRound[1])+1) + '. ' + divRound[1]
             moreLose = str(playoff.index(moreLose)+1) + '. ' + moreLose
             results.append([winName, moreLose])
             
         ###divRound[2] is the 3v6 winner. Find the loser and add to the results
-        firstLose = getLoser(divRound[2], [playoff[2], playoff[5]])
-        secLose = getLoser(divRound[3], [playoff[3], playoff[4]])
+        firstLose = Base.getLoser(divRound[2], [playoff[2], playoff[5]])
+        secLose = Base.getLoser(divRound[3], [playoff[3], playoff[4]])
         ###More seeds to the names
         winName = str(playoff.index(divRound[2])+1) + '. ' + divRound[2]
         firstLose = str(playoff.index(firstLose)+1) + '. ' + firstLose
@@ -388,8 +388,8 @@ sched = True"""
         highWin = self._sim(divRound[1], divRound[2], num=1)
 
         ###Get losers to add to the list
-        lowLose = getLoser(lowWin, [divRound[0], divRound[3]])
-        highLose = getLoser(highWin, [divRound[1], divRound[2]])
+        lowLose = Base.getLoser(lowWin, [divRound[0], divRound[3]])
+        highLose = Base.getLoser(highWin, [divRound[1], divRound[2]])
         ###Seeding
         lowName = str(playoff.index(lowWin)+1) + '. ' + lowWin
         lowLose = str(playoff.index(lowLose)+1) + '. ' + lowLose
@@ -400,7 +400,7 @@ sched = True"""
         ###Sort remaining teams by seed (for HFA)
         lowWin, highWin = sorted([lowWin, highWin], key=lambda x:playoff.index(x))
         champ = self._sim(lowWin, highWin, num=1)
-        runnerUp = getLoser(champ, [lowWin, highWin])
+        runnerUp = Base.getLoser(champ, [lowWin, highWin])
         ###Seeding
         champ = str(playoff.index(champ)+1) + '. ' + champ
         runnerUp = str(playoff.index(runnerUp)+1) + '. ' + runnerUp
@@ -434,7 +434,7 @@ def divisionWinners(league):
     """Returns a list, winners, of division winners. winners[:4] is afc, winners[4:] in nfc"""
     winners = []
     records = league[0]
-    for div in DIVISIONS:
+    for div in Base.DIVISIONS:
         divRecs = [records[i] for i in div]
         if(divRecs.count(max(divRecs)) == 1):
             winners.append(max(div, key=lambda x:records[x]))
@@ -516,13 +516,13 @@ def seeding(league, sixTeam):
     divWinners = divisionWinners(league)
     afcPlayoffs, nfcPlayoffs = divWinners[:4], divWinners[4:]
     ###Sort by seed
-    afcPlayoffs = rankWinners(afcPlayoffs, AFC, league)
-    nfcPlayoffs = rankWinners(nfcPlayoffs, NFC, league)
+    afcPlayoffs = rankWinners(afcPlayoffs, Base.AFC, league)
+    nfcPlayoffs = rankWinners(nfcPlayoffs, Base.NFC, league)
     ###Find wildcards and add to the end
     t = afcPlayoffs.copy()
     q = nfcPlayoffs.copy()
-    afcPlayoffs.extend(wildCards(afcPlayoffs, AFC, league, sixTeam))
-    nfcPlayoffs.extend(wildCards(nfcPlayoffs, NFC, league, sixTeam))
+    afcPlayoffs.extend(wildCards(afcPlayoffs, Base.AFC, league, sixTeam))
+    nfcPlayoffs.extend(wildCards(nfcPlayoffs, Base.NFC, league, sixTeam))
 
     return afcPlayoffs, nfcPlayoffs
 
