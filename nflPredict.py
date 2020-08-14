@@ -3,15 +3,6 @@
 ###HFA = Home Field Advantage
 
 ###Machine Learning imports
-"""
-if(input("Import matplotlib? (n to not import)  ").lower() != "n"):
-    import matplotlib.pyplot as plt
-if(input("Import numpy?  ").lower() != "n"):
-    import numpy
-if(input("Import sklearn?  ").lower() != "n"):
-    from sklearn import linear_model as linear
-    from sklearn.neural_network import MLPClassifier
-"""
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)

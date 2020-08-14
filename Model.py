@@ -19,16 +19,20 @@ MOMENTUM = 0
 EPOCHS = 100
 BATCH_SIZE = 100
 
+MIN_RATING = 485
+MAX_RATING = 515
+
 data = alpha.getRows()
-ratingsList = alpha.findRatings(data)
+ratingsList = alpha.findRatings(data, rating=alpha.baseRating)
 finalData = alpha.addRatings(data, ratingsList)
-finalData = alpha.doubleData(finalData)
+finalData = alpha.doubleData(finalData, True)
 train, validate, test = alpha.splitData(finalData)
 
 total = train + validate
 random.seed(50)
 random.shuffle(total)
 train, validate = total[:-1024], total[-1024:]
+random.seed()
 
 trainX, trainY = alpha.xyData(train)
 valX, valY = alpha.xyData(validate)
@@ -41,7 +45,7 @@ testY = torch.Tensor(testY).view(-1, 1)
 SIZE = trainX.size(0)
 
 class Net(nn.Module):
-    def __init__(self, input_dim = 14, output_dim=1):
+    def __init__(self, input_dim = 15, output_dim=1):
         super(Net, self).__init__()
         self.lin1 = nn.Linear(input_dim, 20)
         self.lin2 = nn.Linear(20, output_dim)
@@ -52,6 +56,7 @@ class Net(nn.Module):
         x = self.lin2(x)
         return x
 
+"""
 with open('BestModel.pkl', 'rb') as f:
     allObjects = pickle.load(f)
 
@@ -60,7 +65,9 @@ oldWorst = min(oldPercs)
 if(oldWorst < 1):
     oldWorst *= 100
 HOLD_MODELS = []
-
+print(oldWorst)
+"""
+HOLD_MODELS = []
 def zeroWeights(model):
     for i in model.modules():
         if(isinstance(i, nn.Linear)):
@@ -132,35 +139,30 @@ zeroWeights(model)
 
 lossFunction = nn.MSELoss()
 #optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
-hyperParams = [(0.1, 0, 500, optim.SGD(model.parameters(),lr=0.1), nn.MSELoss()),
-(0.01, 0, 500, optim.SGD(model.parameters(),lr=0.01), nn.MSELoss()),
-(0.001, 0, 500, optim.SGD(model.parameters(),lr=0.001), nn.MSELoss()),
-(0.0001, 0, 500, optim.SGD(model.parameters(),lr=0.0001), nn.MSELoss()),
-(0.00001, 0, 500, optim.SGD(model.parameters(),lr=0.00001), nn.MSELoss()),
-(0.1, 0.5, 500, optim.SGD(model.parameters(),lr=0.1,momentum=0.5), nn.MSELoss()),
-(0.01, 0.5, 500, optim.SGD(model.parameters(),lr=0.01,momentum=0.5), nn.MSELoss()),
-(0.001, 0.5, 500, optim.SGD(model.parameters(),lr=0.001,momentum=0.5), nn.MSELoss()),
-(0.0001, 0.5, 500, optim.SGD(model.parameters(),lr=0.0001,momentum=0.5), nn.MSELoss()),
-(0.00001, 0.5, 500, optim.SGD(model.parameters(),lr=0.00001,momentum=0.5), nn.MSELoss()),
-(0.1, 0.9, 500, optim.SGD(model.parameters(),lr=0.1,momentum=0.9), nn.MSELoss()),
-(0.01, 0.9, 500, optim.SGD(model.parameters(),lr=0.01,momentum=0.9), nn.MSELoss()),
-(0.001, 0.9, 500, optim.SGD(model.parameters(),lr=0.001,momentum=0.9), nn.MSELoss()),
-(0.0001, 0.9, 500, optim.SGD(model.parameters(),lr=0.0001,momentum=0.9), nn.MSELoss()),
-(0.00001, 0.9, 500, optim.SGD(model.parameters(),lr=0.00001,momentum=0.9), nn.MSELoss()),
-(0.00001, 0.99, 500, optim.SGD(model.parameters(), lr=0.00001, momentum=0.99), nn.MSELoss())]
+hyperParams = [(0.01, 0, 500, optim.SGD, nn.MSELoss(), True),
+               (0.001, 0.9, 250, optim.SGD, nn.MSELoss(), True),
+               (0.001, 0.9, 750, optim.SGD, nn.MSELoss(), True),
+               (0.001, 0.9, 750, optim.RMSprop, nn.MSELoss(), True),
+               (0.01, 0, 250, optim.Adam, nn.MSELoss(), False),
+               (0.001, 0.9, 250, optim.RMSprop, nn.MSELoss(), True),]
 
 
 for i in hyperParams:
     LEARNING_RATE = i[0]
     MOMENTUM = i[1]
     EPOCHS = i[2]
-    optimizer = i[3]
+    model = Net()
+    zeroWeights(model)
+    if(i[5]):
+        optimizer = i[3](model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+    else:
+        optimizer = i[3](model.parameters(), lr=LEARNING_RATE)
     lossFunction = i[4]
     bestModel, bestAcc = startModel(model, lossFunction, optimizer)
     newAcc = accuracy(bestModel, trainX, trainY)
     
     print("{}% and {}%".format(bestAcc*100, newAcc*100), end='  ')
-    if(bestAcc >= oldWorst):
+    if(bestAcc*100 >= oldWorst):
         print("Better")
     else:
         print("Worse")
@@ -168,75 +170,59 @@ for i in hyperParams:
     
 
     
-
+"""
 print()
 for i in range(0, len(allObjects), 2):
     print('Previous Accuracy: {}%  '.format(allObjects[i+1]*100))
-    
+"""   
 print('Current Accuracy: {}%  '.format(bestAcc*100))
 
 """
-Learn. | Moment. | Epoch | Optim. | Loss. | Layers | Layer ... | Val %
-0.0001 | 0 | 500 |  SGD | MSE | 3 | 14,20,1 | 65%
-0.1 | 0 | 500 | SGD | MSE | 3 | 14,20,1 | 50%
-0.01 | 0 | 500 | SGD | MSE | 3 | 14,20,1 | 66.2%
-0.001 | 0 | 500 | SGD | MSE | 3 | 14,20,1 | 61%
-0.0001 | 0 | 500 | SGD | MSE | 3 | 14,20,1 | 61%
-0.00001 | 0 | 500 | SGD | MSE | 3 | 14,20,1 | 56%
-0.001 | 0.5 | 500 | SGD | MSE | 3 | 14,20,1 | 61%
-0.01 | 0.5 | 500 | SGD | MSE | 3 | 14,20,1 | 64.2%
-0.1 | 0.5 | 500 | SGD | MSE | 3 | 14,20,1 | 50%
-0.0001 | 0.5 | 500 | SGD | MSE | 3 | 14,20,1 | 55%
-0.0001 | 0.9 | 500 | SGD | MSE | 3 | 14,20,1 |65.8%
-0.001 | 0.9 | 500 | SGD | MSE | 3 | 14,20,1 | 64.6%
-0.01 | 0.9 | 500 | SGD | MSE | 3 | 14,20,1 | 64.0%
-0.0001 | 0.99 | 500 | SGD | MSE | 3 | 14,20,1 | 66.2%
-----------------------------------------------------
-0.01 | 0 | 100 | SGD | MSE | 3 | 14,20,1 | 64.0%
-0.01 | 0 | 200 | SGD | MSE | 3 | 14,20,1 | 62.6%
-0.01 | 0 | 750 | SGD | MSE | 3 | 14,20,1 | 64.6%
-0.01 | 0 | 1000 | SGD | MSE | 3 | 14,20,1 | 65.2%
-0.001 | 0.5 | 100 | SGD | MSE | 3 | 14,20,1 | 64.4%
-0.001 | 0.5 | 200 | SGD | MSE | 3 | 14,20,1 | 64.0%
-0.001 | 0.5 | 750 | SGD | MSE | 3 | 14,20,1 | 66.0%
-0.001 | 0.5 | 1000 | SGD | MSE | 3 | 14,20,1 | 64.4%
-0.0001 | 0.9 | 100 | SGD | MSE | 3 | 14,20,1 | 65.2%
-0.0001 | 0.9 | 200 | SGD | MSE | 3 | 14,20,1 | 63.6%
-0.0001 | 0.9 | 750 | SGD | MSE | 3 | 14,20,1 | 64.2%
-0.0001 | 0.9 | 1000 | SGD | MSE | 3 | 14,20,1 | 65.4%
------------------------------------------------------
-0.01 | 0 | 500 | Adadelta | MSE | 3 | 14,20,1 | 56.4%
-0.01 | 0 | 500 | Adam | MSE | 3 | 14,20,1 | 65.2%
-0.01 | 0 | 500 | ASGD | MSE | 3 | 14,20,1 | 66.4%
-0.01 | 0 | 500 | RMSprop | MSE | 3 | 14,20,1 |  65.8%
-0.001 | 0.5 | 750 | Adadelta | MSE | 3 | 14,20,1 | 62.7%
-0.001 | 0.5 | 750 | Adam | MSE | 3 | 14,20,1 | 66.6%
-0.001 | 0.5 | 750 | ASGD | MSE | 3 | 14,20,1 | 66.0%
-0.001 | 0.5 | 750 | RMSprop | MSE | 3 | 14,20,1 |  65.8%
-0.0001 | 0.9 | 500 | Adadelta | MSE | 3 | 14,20,1 | 65.0%
-0.0001 | 0.9 | 500 | Adam | MSE | 3 | 14,20,1 | 64.8%
-0.0001 | 0.9 | 500 | ASGD | MSE | 3 | 14,20,1 | 64.3%
-0.0001 | 0.9 | 500 | RMSprop | MSE | 3 | 14,20,1 | 64.8%
--------------------------------------------------------
-0.01 | 0 | 500 | ASGD | L1 | 3 | 14,20,1 | 67.2%
-0.01 | 0 | 500 | SGD | L1 | 3 | 14,20,1 | 66.4%
-0.001 | 0.5 | 750 | ASGD | L1 | 3 | 14,20,1 | 66.4%
-0.001 | 0.5 | 750 | SGD | L1 | 3 | 14,20,1 | 66.6%
---------------------------------------------------------
-0.01 | 0 | 500 | ASGD | L1 | 3 | 14,5,1 | 67.3%
-0.01 | 0 | 500 | ASGD | L1 | 3 | 14,10,1 | 66%
-0.01 | 0 | 500 | ASGD | L1 | 3 | 14,14,1 | 67.1%
-0.01 | 0 | 500 | ASGD | L1 | 3 | 14,28,1 | 65.8%
-0.001 | 0.5 | 750 | SGD | L1 | 3 | 14,5,1 | 68.5%
-0.001 | 0.5 | 750 | SGD | L1 | 3 | 14,10,1 | 64.8%
-0.001 | 0.5 | 750 | SGD | L1 | 3 | 14,14,1 | 63.5%
-0.001 | 0.5 | 750 | SGD | L1 | 3 | 14,28,1 | 62.1%
---------------------------------------------------------
-0.01 | 0 | 500 | ASGD | L1 | 2 | 14,1 | 65.4%
-0.001 | 0.5 | 750 | SGD | L1 | 2 | 14,1 | 65.8%
--------------------------------------------------------
-0.01 | 0 | 500 | ASGD | L1 | 3 | 14,20,1 + ReLU | 64%
-0.001 | 0.5 | 750 | SGD | L1 | 3 | 14,20,1 + ReLU | 65.8%
--------------------------------------------------------
-0.001 | 0.5 | 750 | SGD | L1 | 3 | 14,6,1 | 
+Learn. | Moment. | Epoch | Optim. | Loss. | Layers | Layer ... | % | Hold
+0.1 | 0 | 500 | SGD | MSE | 3 | 15,20,1 | 51%
+0.01 | 0 | 500 | SGD | MSE | 3 | 15,20,1 | 67.4%       1
+0.001 | 0 | 500 | SGD | MSE | 3 | 15,20,1 | 66.1%
+0.0001 | 0 | 500 | SGD | MSE | 3 | 15,20,1 | 60.3%
+0.1 | 0.5 | 500 | SGD | MSE | 3 | 15,20,1 | 51%
+0.01 | 0.5 | 500 | SGD | MSE | 3 | 15,20,1 | 66.9%
+0.001 | 0.5 | 500 | SGD | MSE | 3 | 15,20,1 | 67.1%
+0.0001 | 0.5 | 500 | SGD | MSE | 3 | 15,20,1 | 62.7%
+0.1 | 0.9 | 500 | SGD | MSE | 3 | 15,20,1 | 58.6%
+0.01 | 0.9 | 500 | SGD | MSE | 3 | 15,20,1 | 65.1%
+0.001 | 0.9 | 500 | SGD | MSE | 3 | 15,20,1 | 67.1%    1
+0.0001 | 0.9 | 500 | SGD | MSE | 3 | 15,20,1 | 65.1%
+---------------------------------------------------------
+0.01 | 0 | 250 | SGD | MSE | 3 | 15,20,1 | 67.6%
+0.001 | 0.5 | 250 | SGD | MSE | 3 | 15,20,1 | 65.1%
+0.001 | 0.9 | 250 | SGD | MSE | 3 | 15,20,1 | 67.6%     234
+0.01 | 0 | 500 | SGD | MSE | 3 | 15,20,1 | 66.5%
+0.001 | 0.5 | 500 | SGD | MSE | 3 | 15,20,1 | 66.4%
+0.001 | 0.9 | 500 | SGD | MSE | 3 | 15,20,1 | 66.8%%
+0.1 | 0 | 750 | SGD | MSE | 3 | 15,20,1 | 66.1%
+0.001 | 0.5 | 750 | SGD | MSE | 3 | 15,20,1 | 66.7%
+0.001 | 0.9 | 750 | SGD | MSE | 3 | 15,20,1 | 67.2%      2
+----------------------------------------------------------
+0.01 | 0 | 250 | Adadelta | MSE | 3 | 15,20,1 | 49.9%
+0.001 | 0.9 | 250 | Adadelta | MSE | 3 | 15,20,1 | 48.7%
+0.001 | 0.9 | 750 | Adadelta | MSE | 3 | 15,20,1 | 50.6%
+0.01 | 0 | 250 | Adam | MSE | 3 | 15,20,1 | 67.6%
+0.001 | 0.9 | 250 | Adam | MSE | 3 | 15,20,1 | 66.7%
+0.001 | 0.9 | 750 | Adam | MSE | 3 | 15,20,1 | 67.2%
+0.01 | 0 | 250 | ASGD | MSE | 3 | 15,20,1 | 66.1%
+0.001 | 0.9 | 250 | ASGD | MSE | 3 | 15,20,1 | 61.2%
+0.001 | 0.9 | 750 | ASGD | MSE | 3 | 15,20,1 | 65.4%
+0.01 | 0 | 250 | RMSProp | MSE | 3 | 15,20,1 | 67.3%
+0.001 | 0.9 | 250 | RMSProp | MSE | 3 | 15,20,1 | 67.5%
+0.001 | 0.9 | 750 | RMSProp | MSE | 3 | 15,20,1 | 67.4%     3
+-----------------------------------------------------------
+0.01 | 0 | 250 | Adam | 3 | 15,5,1 | 67.9%                 4
+0.01 | 0 | 250 | SGD | 3 | 15,5,1 | 66.1%
+0.001 | 0.9 | 250 | SGD | 3 | 15,5,1 | 66.5%
+0.001 | 0.9 | 250 | RMSProp | 3 | 15,5,1 | 67.6%
+0.01 | 0 | 250 | Adam | 3 | 15,10,1 | 66.9%
+0.01 | 0 | 250 | SGD | 3 | 15,10,1 | 65.4%
+0.001 | 0.9 | 250 | SGD | 3 | 15,10,1 | 66.4
+0.001 | 0.9 | 250 | RMSProp | 3 | 15,10,1 | 68.3%
+
+
 """

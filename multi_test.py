@@ -20,10 +20,9 @@ def getYear(i):
     for j in Ratings.getOldRatings(i)[0]:
         rosters[j] = Injury.getRoster(j, i)
     print("Finished rosters for year {}".format(i))
-    q = 0
-    for j in year:
-        q+=1
-        for k in j:
+    for j in range(len(year)):
+        week, weekNum = year[j], j+1
+        for k in week:
             home, away = k[2], Base.getLoser(k[2], [k[1], k[0]])
             if(k[2] == k[0]):
                 homeWins = '1'
@@ -32,12 +31,13 @@ def getYear(i):
             points = str(k[3])
             homeInj = list(map(str, Injury.findInjuries(home, 1, k[-1], roster=rosters[home])))
             awayInj = list(map(str, Injury.findInjuries(away, 0, k[-1], roster=rosters[away])))
-            line = [str(i), home, away, homeWins, points]
+            line = [str(i), str(weekNum), home, away, homeWins, points]
             line.extend(homeInj); line.extend(awayInj)
             line = ','.join(line) + '\n'
             text += line
-        print("Year {} Week {}".format(i,q))
+        print("Year {} Week {}".format(i,weekNum))
     return text
+
 
 if __name__ == '__main__':
     old = time.time()
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     new = time.time()
     print("Time: ", new-old)
 
-    HEAD = 'Year,Home,Away,Home Wins,Points,HQB,HRB,HWR,HTE,HT,HG,HC,HDT,HDE,HLB,HCB,HS,AQB,ARB,AWR,ATE,AT,AG,AC,ADT,ADE,ALB,ACB,AS\n'
+    HEAD = 'Year,Week,Home,Away,Home Wins,Points,HQB,HRB,HWR,HTE,HT,HG,HC,HDT,HDE,HLB,HCB,HS,AQB,ARB,AWR,ATE,AT,AG,AC,ADT,ADE,ALB,ACB,AS\n'
 
     ALL_TEXT = ''.join(t)
     ALL_TEXT = HEAD + ALL_TEXT

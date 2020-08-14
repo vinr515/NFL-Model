@@ -3,6 +3,8 @@ from sklearn.metrics import log_loss, roc_curve, roc_auc_score
 import urllib3
 import concurrent.futures
 import time
+import optimizeAlpha as alpha
+import pickle
 BeautifulSoup = Base.BeautifulSoup
 plt = Base.plt
 
@@ -10,11 +12,15 @@ Base.TEAM_ABBRS['Oakland Raiders'] = Base.TEAM_ABBRS['Las Vegas Raiders']
 Base.TEAM_ABBRS['St. Louis Rams'] = Base.TEAM_ABBRS['Los Angeles Rams']
 Base.TEAM_ABBRS['San Diego Chargers'] = Base.TEAM_ABBRS['Los Angeles Chargers']
 
+with open('BestModel.pkl', 'rb') as f:
+    THIS_MODEL = pickle.load(f)
+
 def getHead():
     with open('gameData/newHold.csv', 'r') as f:
         HEAD = f.read().split('\n')[0] + '\n'
     return HEAD
 
+"""
 def getYear(i):
     print("Getting year {}".format(i))
     year = Train.getYear(i)[:17]
@@ -115,47 +121,41 @@ def compareBase(year):
     #injPred = Base.RATING_AND_INJURY.predict(injX)
     
     return rateX, rateY, injX, injY
+"""
+
+
+def getYear(year):
+    """Returns a list of x and y values for every game in one year"""
+    data = alpha.getRows()
+    ratingsList = alpha.findRatings(data, rating=alpha.baseRating)
+    finalData = alpha.addRatings(data, ratingsList)
+    finalData = alpha.doubleData(finalData, True)
+    finalData = [j for j in finalData if j[0] == year]
+
+    finalX, finalY = alpha.xyData(finalData)
+    finalX = [j[1:] for j in finalX]
+    return finalX, finalY
+
+def getOrder(year):
+    """Returns a list of [Away Team, Home Team] lists in one year. The X and Y
+values from getYear() are in this order"""
+    data = alpha.getRows()
+    data = [[i[3], i[2]] for i in data if i[0] == str(year)]
+    return data
 
 def compareModels(year, func):
+    """Compares two models from one year using "func". "func" takes in two lists
+and returns two numbers"""
     outcomes, probs = preds538(year)
-    rX, rY, iX, iY = compareBase(year)
-    rateX, rateY, injX, injY = [], [], [], []
-    
-    index = 0
-    for i in outcomes:
-        end = index + len(i)
-        rateX.append([rX[j] for j in range(index, end)])
-        rateY.append([rY[j] for j in range(index, end)])
-        injX.append([iX[j] for j in range(index, end)])
-        injY.append([iY[j] for j in range(index, end)])
-        index = end
+    xVals, yVals = getYear(year)
 
-    outcomeList = []
-    for i in range(len(rateX)):
-        thisPred = Base.RATING_ONLY.predict_proba(rateX[i])[:, 1]
-        line = [func(rateY[i], thisPred)]
-        if(len(line) != 1):
-            print('fadfafafads')
-            return rateY[i], thisPred
-        thisPred = Base.RATING_AND_INJURY.predict(injX[i])
-        line.append(func(injY[i], thisPred))
-        line.append(func(outcomes[i], probs[i]))
-        if(len(line) != 3):
-            print('fadfafafads')
-            return injY[i], thisPred, outcomes[i], probs[i]
-        outcomeList.append(line)
-
-    thisPred = Base.RATING_ONLY.predict_proba(rX)[:, 1]
-    newPred = Base.RATING_AND_INJURY.predict(iX)
-    newOuts, newProbs = [], []
-    for i in range(len(outcomes)):
-        newOuts.extend(outcomes[i])
-        newProbs.extend(probs[i])
-    outcomeList.append([func(rY, thisPred), func(iY, newPred), func(newOuts, newProbs)])
-
+    preds = THIS_MODEL.predict(xVals)
+    outcomeList = [func(yVals, preds), func(outcomes, probs)]
     return outcomeList
     
 def preds538(year, order=False):
+    """Returns the outcomes and chances of winning predicted by 538 for one year.
+If order = True, it also returns the order of the games, like getOrder()"""
     url = 'https://projects.fivethirtyeight.com/{}-nfl-predictions/games/'.format(year)
     http = urllib3.PoolManager()
     r_tags = http.request("GET", url).data.decode('utf-8')
@@ -164,11 +164,13 @@ def preds538(year, order=False):
     probs, outcomes = [], []
     gameOrder = []
     for i in weeks:
-        probs.append([]); outcomes.append([])
+        #probs.append([]); outcomes.append([])
         for j in i.find_all('div', attrs={'class':'game'}):
             game = gameData(j, order)
-            probs[-1].append(game[0])
-            outcomes[-1].append(game[1])
+            #probs[-1].append(game[0])
+            #outcomes[-1].append(game[1])
+            probs.append(game[0])
+            outcomes.append(game[1])
 
             if(order):
                 gameOrder.append(game[2])
@@ -178,11 +180,13 @@ def preds538(year, order=False):
     return outcomes, probs, gameOrder
 
 def findWeeks(soup):
+    """Returns a list of weeks of predictions for 538"""
     weeks = soup.find_all('section', attrs={'class':'week'})
     weeks = [i for i in weeks if 'week' in i.find('h3').text.lower()]
     return weeks
 
 def gameData(game, order=False):
+    """Returns the chance of winning and away and home team for one game"""
     body = game.find('table', attrs={'class':'game-body'}).find('tbody')
     homeTeam = body.find_all('tr')[-1]
     chance = homeTeam.find('td', attrs={'class':'td number chance'}).text
@@ -200,7 +204,7 @@ def gameData(game, order=False):
     homeName = homeTeam.find_all('td')[1].text.strip()
     awayName = awayTeam.find_all('td')[1].text.strip()
 
-    return chance, win, [homeName, awayName]
+    return chance, win, [awayName, homeName]
 def numCorrect(outcomes, probs):
     a = 0
     for i in range(len(outcomes)):
@@ -210,59 +214,45 @@ def numCorrect(outcomes, probs):
 
 def rocGraph(year):
     outcomes, probs = preds538(year)
-    a, b = [], []
-    for i in range(len(outcomes)):
-        a.extend(outcomes[i])
-        b.extend(probs[i])
-    outcomes, probs = a.copy(), b.copy()
 
-    rateX, rateY, injX, injY = compareBase(year)
-    rateProb = Base.RATING_ONLY.predict_proba(rateX)[:, 1]
-    injProb = Base.RATING_AND_INJURY.predict(injX)
+    xVals, yVals = getYear(year)
+    preds = THIS_MODEL.predict(xVals)
 
     five_fp, five_tp, _ = roc_curve(outcomes, probs)
-    rate_fp, rate_tp, _ = roc_curve(rateY, rateProb)
-    inj_fp, inj_tp, _ = roc_curve(injY, injProb)
+    rate_fp, rate_tp, _ = roc_curve(yVals, preds)
 
     plt.plot(five_fp, five_tp, color='blue', label='FiveThirtyEight')
-    plt.plot(rate_fp, rate_tp, color='red', label='Rating Only')
-    plt.plot(inj_fp, inj_tp, color='black', label='Rating and Injury')
+    plt.plot(rate_fp, rate_tp, color='green', label='This Model')
     plt.legend()
     plt.show()
 
-    five, rate = roc_auc_score(outcomes, probs), roc_auc_score(rateY, rateProb)
-    inj = roc_auc_score(injY, injProb)
-    return five, rate, inj
+    five, rate = roc_auc_score(outcomes, probs), roc_auc_score(yVals, preds)
+    return rate, five
 
 def findGaps(year):
-    games, gameOrder = findRatings(getGames(year), year)
-    injX, injY = injuryValues(games)
+    xVals, yVals = getYear(year)
+    gameOrder = getOrder(year)
+    #games, gameOrder = findRatings(getGames(year), year)
 
-    injProb = Base.RATING_AND_INJURY.predict(injX)
+    preds = THIS_MODEL.predict(xVals)
 
     outcomes, probs, newOrder = preds538(2019, True)
-    a, b = [], []
-    for i in range(len(outcomes)):
-        a.extend(outcomes[i])
-        b.extend(probs[i])
-
-    outcomes, probs = a.copy(), b.copy()
     gameOrder = changeNames(gameOrder)
 
     finalOrder = sorted(gameOrder)
-    newY, newInj, newOutcomes, newFive = [], [], [], []
+    newY, newPreds, newOutcomes, newProbs = [], [], [], []
     newXVals = []
     for i in range(len(finalOrder)):
-        injIndex = gameOrder.index(finalOrder[i])
+        thisIndex = gameOrder.index(finalOrder[i])
         fiveIndex = newOrder.index(finalOrder[i])
 
-        newY.append(injY[injIndex])
-        newInj.append(injProb[injIndex])
-        newXVals.append(injX[injIndex])
+        newY.append(yVals[thisIndex])
+        newPreds.append(preds[thisIndex])
+        newXVals.append(xVals[thisIndex])
         newOutcomes.append(outcomes[fiveIndex])
-        newFive.append(probs[fiveIndex])
+        newProbs.append(probs[fiveIndex])
 
-    return newY, newInj, newXVals, newOutcomes, newFive, finalOrder
+    return newY, newPreds, newXVals, newOutcomes, newProbs, finalOrder
 
 def changeNames(order):
     swapDict = {'New York Jets':'N.Y. Jets', 'New York Giants':'N.Y. Giants',

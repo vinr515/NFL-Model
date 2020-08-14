@@ -1,8 +1,10 @@
 from Update import *
 from multiprocessing import Pool
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 import random
+import time
 numpy = Base.numpy
 plt = Base.plt
 linear = Base.linear
@@ -12,14 +14,21 @@ def getRows():
     with open('gameData/newHold.csv', 'r') as f:
         DATA = f.read().split('\n')[1:]
         DATA = [i.split(',') for i in DATA]
-    return DATA[:-1]
+    return DATA
 
 def findRatings(rows, dicts=False, rating=None):
     if(rating == None):
         rating = Ratings.getOldRatings(1999)[0]
+    """
+    for i in rating:
+        rating[i] = 500.0
+    """
+    #season = rating.copy()
+    
     season = {}
     for i in rating:
         season[i] = 500.0
+    
     year = "2000"
     ratingList = []
 
@@ -29,12 +38,12 @@ def findRatings(rows, dicts=False, rating=None):
             year = i[0]
         if(len(i) < 3):
             print(i)
-        ratingList.append([rating[i[1]], season[i[1]], rating[i[2]], season[i[2]]])
-        if(i[3] == "1"):
-            win, lose = i[1], i[2]
+        ratingList.append([rating[i[2]], season[i[2]], rating[i[3]], season[i[3]]])
+        if(i[4] == "1"):
+            win, lose = i[2], i[3]
         else:
-            win, lose = i[2], i[1]
-        game = [(win, lose, i[1], int(i[4]), '')]
+            win, lose = i[3], i[2]
+        game = [(win, lose, i[2], int(i[5]), '')]
         rating = Ratings.changeWeekRatings(game, rating)
         season = Ratings.changeWeekRatings(game, season)
 
@@ -47,9 +56,6 @@ def removeTeams(rating, season, year):
         rating['Houston Texans'] = 500.0
         season['Houston Texans'] = 500.0
     elif(year == '2016'):
-        if(not('St. Louis Rams' in rating)):
-            print(rating)
-            print('fdafasfasdfsad')
         rating['Los Angeles Rams'] = rating['St. Louis Rams']
         season['Los Angeles Rams'] = season['St. Louis Rams']
         del rating['St. Louis Rams'], season['St. Louis Rams']
@@ -58,31 +64,39 @@ def removeTeams(rating, season, year):
         season['Los Angeles Chargers'] = season['San Diego Chargers']
         del rating['San Diego Chargers'], season['San Diego Chargers']
 
+    #season = rating.copy()
+    
     for i in season:
         season[i] = 500.0
+    
     return rating, season
     
 def addRatings(data, ratings):
     newData = []
     for i in range(len(data)):
-        line = data[i][:1] + ratings[i] + data[i][3:]
+        line = data[i][:2] + ratings[i] + data[i][4:]
         line = list(map(float, line))
         newData.append(line)
     return newData
 
-def doubleData(data):
+def doubleData(data, week=False):
     """Doubles the data into home and away rows"""
     newData = []
     for i in data:
-        homeLine = [i[0], i[1]-i[3], i[2]-i[4]]
-        injDiff = [i[j]-i[j+12] for j in range(7, 19)]
+        if(week):
+            homeLine = [i[0], i[1], i[2]-i[4], i[3]-i[5]]
+        else:
+            homeLine = [i[0], i[2]-i[4], i[3]-i[5]]
+        injDiff = [i[j]-i[j+12] for j in range(8, 20)]
         homeLine.extend(injDiff)
-        awayLine = [-j for j in homeLine]
-        awayLine[0] = homeLine[0]
-        homeLine.append(i[5])
-        awayLine.append(1-i[5])
+        #awayLine = [-j for j in homeLine]
+        #awayLine[0] = homeLine[0]
+        #if(week):
+        #    awayLine[1] = homeLine[1]
+        homeLine.append(i[6])
+        #awayLine.append(1-i[6])
         newData.append(homeLine)
-        newData.append(awayLine)
+        #newData.append(awayLine)
     return newData
 
 def splitData(data):
@@ -179,18 +193,76 @@ def getModelList():
             for k in alphaVals:
                 for l in alphaVals:
                     modelList.append(linear.BayesianRidge(n_iter=i, tol=j, alpha_1=k, alpha_2=l))
-                    
+
+    estimators = [100, 200, 300, 400, 500]
+    for i in estimators:
+        modelList.append(RandomForestClassifier(n_estimators=i))
     return modelList
+
+def getSearchLine(model, paramDict):
+    old  = time.time()
+    search = GridSearchCV(model, paramDict)
+    search.fit(trainX, trainY)
+    pred = search.best_estimator_.predict(valX)
+    num = score(valY, pred)/len(valY)
+    print('.')
+    new = time.time()
+    print("Time: {}".format(new-old))
+    return [search.best_estimator_, num]
 
 def oneGo(i):
     Base.RATING_DAMP = i
+    data = getRows()
+    ratingsList = findRatings(data, rating=baseRating)
+    finalData = addRatings(data, ratingsList)
+    finalData = doubleData(finalData, True)
+
+    newTrain, newVal, newTest = splitData(finalData)
+    newTotal = newTrain+newVal
+    random.seed(50)
+    random.shuffle(newTotal)
+    newTrain, newVal = newTotal[:-512], newTotal[-512:]
+    newTrainX, newTrainY = xyData(newTrain)
+    newValX, newValY = xyData(newVal)
+    random.seed()
+    
     results = []
+    cVals = [.001, .01, .1, 1, 10]
+    alphaVals = [1e-7, 1e-5]
+    tol = [0.01, 0.001, 0.0001]
+    
+    linReg = linear.LinearRegression().fit(newTrainX, newTrainY)
+    pred = linReg.predict(newValX)
+    linearLine = [linReg, score(newValY, pred)/len(newValY)]
+    """
+    print('.\nTime: 0')
+    print(linearLine)
+    ridgeLine = getSearchLine(linear.Ridge(), {'alpha':cVals, 'max_iter':[100, 750]})
+    print(ridgeLine)
+    logLine = getSearchLine(linear.LogisticRegression(), {'C':cVals, 'tol':tol,
+                                                            'max_iter':[100, 700]})
+    print(logLine)
+    bayLine = getSearchLine(linear.BayesianRidge(), {'n_iter':[300, 500], 'tol':tol,
+                                                      'alpha_1':alphaVals, 'alpha_2':alphaVals, 'lambda_1':alphaVals,
+                                                      'lambda_2':alphaVals})
+    print(bayLine)
+    forestLine = getSearchLine(RandomForestClassifier(), {'n_estimators':[200, 700],
+                                                          'max_features':['auto','sqrt','log2']})
+    print(forestLine)
+    #svcLine = getSearchLine(SVC(), {'C':cVals, 'kernel':['linear', 'poly', 'rbf', 'sigmoid'],
+    #                                 'probability':[True]})
+    #print(svcLine)
+    """
+    return [linearLine]#, ridgeLine, logLine, bayLine, forestLine]#, svcLine]
+    
+    """
     for j in modelList:
         reg, valScore, testScore = trainModels(train, validate, test, j)
         results.append([reg, valScore, testScore, len(validate), i])
         print('.', end='')
-    line = max(results, key=lambda x:x[1])
-    return line
+    
+    return results
+    """
 
 def newModel(modelList):
     results = []
@@ -200,17 +272,35 @@ def newModel(modelList):
 
     return results
 
-modelList = getModelList()
+baseRating = {'Arizona Cardinals': 496.2, 'Atlanta Falcons': 499.9,
+              'Baltimore Ravens': 499.9, 'Buffalo Bills': 503.0,
+              'Carolina Panthers': 500.1, 'Chicago Bears': 497.7,
+              'Cincinnati Bengals': 493.7, 'Dallas Cowboys': 501.6,
+              'Denver Broncos': 501.9, 'Detroit Lions': 499.4,
+              'Green Bay Packers': 501.5, 'Indianapolis Colts': 500.3,
+              'Jacksonville Jaguars': 503.8, 'Kansas City Chiefs': 501.4,
+              'Miami Dolphins': 500.8, 'Minnesota Vikings': 505.1,
+              'New England Patriots': 500.6, 'New Orleans Saints': 495.1,
+              'New York Giants': 499.1, 'New York Jets': 502.6,
+              'Oakland Raiders': 501.9, 'Philadelphia Eagles': 495.5,
+              'Pittsburgh Steelers': 499.5, 'San Diego Chargers': 498.0,
+              'San Francisco 49ers': 498.2, 'Seattle Seahawks': 501.5,
+              'St. Louis Rams': 504.3, 'Tampa Bay Buccaneers': 500.5,
+              'Washington Redskins': 500.2, 'Tennessee Titans': 502.2,
+              'Cleveland Browns': 494.4}
+#modelList = getModelList()
 data = getRows()
-ratingsList = findRatings(data)
+ratingsList = findRatings(data, rating=baseRating)
 finalData = addRatings(data, ratingsList)
-finalData = doubleData(finalData)
+finalData = doubleData(finalData, True)
 train, validate, test = splitData(finalData)
 
 total = train+validate
 random.seed(50)
 random.shuffle(total)
-train, validate = total[:-1024], total[-1024:]
+train, validate = total[:-512], total[-512:]
+trainX, trainY = xyData(train)
+valX, valY = xyData(validate)
 """
 if __name__ == '__main__':
     with Pool(4) as p:
