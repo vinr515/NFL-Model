@@ -5,7 +5,6 @@ class Prediction:
     """Predicts the score for all games included. gamesList is from
     getGame()"""
     def __init__(self, gamesList, year, rate, seas):
-        print("Check if Injuries are correct. (Changed from Injury score to Injury difference")
         self.year = year
         self.rate = rate
         self.seas = seas
@@ -34,10 +33,10 @@ def convert(gamesList, year, rate, seas):
     newList = []
     print("Gathering Data ", end='')
     for i in gamesList:
-        ratingDiff = rate[i[0]] - rate[i[1]]
-        seasDiff = seas[i[0]] - seas[i[1]]
+        ratingDiff = rate[i[1]] - rate[i[0]]
+        seasDiff = seas[i[1]] - seas[i[0]]
         injury = Injury.getFuture(i, year)
-        line = [ratingDiff, seasDiff] + injury + [i[0], i[1]]
+        line = [ratingDiff, seasDiff] + injury + [i[1], i[0]]
         newList.append(line)
         print(".", end='')
 
@@ -68,21 +67,20 @@ def predictAll(gameList):
     probs = list(Base.RATING_AND_INJURY.predict(inputData))
     ###Subtract HFA because the predictions are done for the away team
     ###And percentages should add up to 100 (Home+HFA[1], Away-HFA[1])
-    probs = [(i*100)-Base.HFA_VALS[1] for i in probs]
+    probs = [(i*100) for i in probs]
     
     winners = [winner(probs[i], gameList[i][-2], gameList[i][-1]) for i in range(len(probs))]
 
     return winners
 
-def winner(percent, away, home):
+def winner(percent, home, away):
     """Takes the number from getResult, and turns it into a team"""
-    ###All predictions are done from away's Point of View
+    ###All predictions are done from home's Point of View
     percent = 99.9 if percent > 100 else percent
-    formatPercent = str(round(percent, 1)) + "%"
+    formatPercent = str(round(percent, 1))
     ###Use the unformatted percent so a tie is very unlikely
-    ###(All 0's return 50.002%, which would show an away win here
-    if(percent < 50):
-        return home + ", " + formatPercent
     if(percent > 50):
-        return away + ", " + formatPercent
-    return "Tie"
+        return "{}, {}%".format(home, formatPercent)
+    if(percent < 50):
+        return "{}, {}%".format(away, formatPercent)
+    return "Tie between {} and {}".format(home, away)

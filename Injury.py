@@ -53,7 +53,7 @@ def getDifference(game, aRost=None, hRost=None, aStart=None, hStart=None):
     return diff
 
 def getFuture(game, year):
-    """Returns the injury difference for a future game in year (away team - home team)"""
+    """Returns the injury difference for a future game in year (home team - away team)"""
     ###Future games list all of their injuries, including backups
     ###So the backups need to be separated
     url = "https://www.pro-football-reference.com" + game[2]
@@ -74,7 +74,7 @@ def getFuture(game, year):
     ###Apply the injuryVal function to get a number for each player, then add it
     awayScore = [awayInj.count(i) for i in Base.POS_ORDER]
     homeScore = [homeInj.count(i) for i in Base.POS_ORDER]
-    return subtract(awayScore, homeScore)
+    return subtract(homeScore, awayScore)
     
 def getFutInjuries(injuries):
     """Returns a list of [name, position] lists of injuries for a future game
