@@ -9,10 +9,8 @@ better team doesn't move you too much. Beating by 7 is beating next team
 Divided by 20 so one game doesn't affect that much.
 """
 
-def adjustRating(old, difference, points, t=False):
+def adjustRating(old, difference, points):
     """Returns what the new rating should be for one game/team"""
-    if(t):
-        print(Base.RATING_DAMP)
     pointsAdjust = points**2/49
     ###You subtract points djust, since a lower x is a higher y, so worse loss
     ###Means less rating, better win means more rating
