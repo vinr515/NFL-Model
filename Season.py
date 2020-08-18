@@ -1,6 +1,11 @@
-import Ratings, Train
-import nflPredict as Base
+from NFL_Model import Ratings, Train
+from NFL_Model import nflPredict as Base
 import random
+
+print("New point function is {}".format("0.1(0.92^x)"))
+
+AFC_COUNT = 0
+NFC_COUNT = 0
 
 class Season:
     """Class to simulate season. startWeek is 0 for preseason. If
@@ -147,8 +152,9 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
     def outputChances(self):
         """Return, in chart like form, the chances for each team for the next season"""
         print()
-        print("%-21s %8s %8s %8s %8s %8s" % ("Team Name", "Won SB", "Made SB", "Won Div.", "Made Post.", "Avg Wins"))
-        for i in sorted(self.allRate):
+        length = len(max(self.allRate, key=lambda x:len(x)))+2
+        print("%-{}s %8s %8s %8s %8s %8s".format(length) % ("Team Name", "Won SB", "Made SB", "Won Div.", "Made Post.", "Avg Wins"))
+        for i in sorted(self.allRate, key=lambda x:self.champ[x], reverse=True):
             ###This only sorts the keys, so we get all the teams sorted by name
             winSB = str(round(self.champ[i]/(Base.SIM_NUM/100), 1)) + "%"
             madeSB = str(round(self.inSB[i]/(Base.SIM_NUM/100), 1)) + "%"
@@ -156,7 +162,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
             madePlay = str(round(self.inPlay[i]/(Base.SIM_NUM/100), 1)) + "%"
             ###This one isn't a percent, so divide by 2,000
             wins = str(round(self.winAvg[i]/Base.SIM_NUM, 1))
-            print("%-21s %8s %8s %8s %8s %8s" % (i, winSB, madeSB, divWin, madePlay, wins))
+            print("%-{}s %8s %8s %8s %8s %8s".format(length) % (i, winSB, madeSB, divWin, madePlay, wins))
 
     def outputSched(self, sched):
         """Formats the rest of the year and outputs it"""
@@ -217,26 +223,24 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         afcChamp, nfcChamp = self._toSB(afcPlayoffs, results), self._toSB(nfcPlayoffs, results)
         return afcChamp, nfcChamp
 
-    def _predictRating(self, games):
+    def _predictRating(self, games, week):
         """Uses Season._randomWinner() to predict the winner of games based only on rating"""
         ###Turn each game into a list that can go into RATING_ONLY
         ###games are [away, home], so this is done from the Home's Point of View
-        rates = [[self.allRate[i[1]]-self.allRate[i[0]], self.seasRate[i[1]]-self.allRate[i[1]]]
+        rates = [[self.allRate[i[1]]-self.allRate[i[0]], self.seasRate[i[1]]-self.seasRate[i[1]]]
                  for i in games]
         ###Predict, and add HFA, since it's from Home's POV
-        allProbs = list(Base.RATING_ONLY.predict_proba(rates)[:, 1])
-        allProbs = [(i*100)+Base.HFA_VALS[0] for i in allProbs]
-        ###Add HFA
-        ###Use a random number to find the winner
-        rands = [(random.randint(1, 100)) for i in range(len(games))]
-        ###1 means the home team wins (games[1]), 0 means the away team (games[0])
-        winTeams = [int(rands[i] < allProbs[i]) for i in range(len(rands))]
+        rates = [[1,week]+i+[0 for j in range(12)] for i in rates]
+        allProbs = []
+        for i in range(len(rates)):
+            allProbs.append(getResult(games[i][1], games[i][0], rates[i]))
         ###Get a [winner, loser] list
-        teamNames = [[games[i][winTeams[i]], games[i][1-winTeams[i]]] for i in range(len(games))]
-
-        for i in teamNames:
-            self.leagueSched.append(i)
-            self._ratingChange(i[0], i[1])
+        resultList = [[allProbs[i][0], Base.getLoser(allProbs[i][0], games[i][:2])]
+                       for i in range(len(allProbs))]
+        
+        for i in range(len(resultList)):
+            self.leagueSched.append(resultList[i])
+            self._ratingChange(resultList[i][0], resultList[i][1], allProbs[i][1])
 
     def predictSeason(self):
         """Runs the _simSeason() 2000 times, and updates the season end stats"""
@@ -261,13 +265,11 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
             for j in self.records:
                 self.winAvg[j] += self.records[j]
 
-    def _ratingChange(self, win, lose):
+    def _ratingChange(self, win, lose, points):
         """Changes the rating for both teams. """
         ###Find each team's rating
         winRate, loseRate = self.allRate[win], self.allRate[lose]
         winSeas, loseSeas = self.seasRate[win], self.seasRate[lose]
-        ###Random reasonable point difference
-        points = random.randint(1, 10)
         ###Change ratings
         self.allRate = Ratings.changeWeekRatings([(win, lose, points, '')], self.allRate)
         self.seasRate = Ratings.changeWeekRatings([(win, lose, points, '')], self.seasRate)
@@ -279,13 +281,13 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
             ###predictRating add them to the list anyway
             week = self.ALL_WEEKS[i-self.startWeek]
             
-            self._predictRating(week)
+            self._predictRating(week, i+1)
 
     def _rewriteRatings(self):
         self.allRate = self.ALL_START.copy()
         self.seasRate = self.SEAS_START.copy()
 
-    def _sim(self, home, away, num=100, homeField=True):
+    def _sim(self, home, away, num=100, homeField=True, sb=False):
         """Sims a game for the postseason. (For the regular season, it only randomizes once)
     home is False for the Super Bowl, when there is no HFA"""
         ###Win totals for both team
@@ -293,13 +295,14 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###Home's Point of View
         allDiff = (self.allRate[home] - self.allRate[away])
         seasDiff = (self.seasRate[home] - self.seasRate[away])
-        percent = Base.RATING_ONLY.predict_proba([[allDiff, seasDiff]])[0][1]*100
-        percent = round(percent, 1)
-        if(homeField): percent += Base.HFA_VALS[0]
-        ###Winner loser depending on whether percent < or > 50%
-        winList = [randomWinner(home, away, percent)[0] for i in range(num)]
-        winner = max([home, away], key=lambda x:winList.count(x))
-        return winner
+        
+        line = [1, 17, allDiff, seasDiff] + [0 for i in range(12)]
+        if(not(homeField) or sb):
+            line[0] = 0.5
+        result = getResult(home, away, line, times=num)
+        self._ratingChange(result[0], Base.getLoser(result[0], [home, away]), result[1])
+
+        return result[0]
 
     def _simSeason(self):
         """Sims one season, and returns the sb winner, a list of sb teams, a list of
@@ -317,7 +320,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         afcName = '. '.join(afcChamp.split('. ')[1:])
         nfcName = '. '.join(nfcChamp.split('. ')[1:])
         sb = [afcName, nfcName]
-        sbChamp = self._sim(afcName, nfcName, homeField=False)
+        sbChamp = self._sim(afcName, nfcName, homeField=False, sb=True)
         return sbChamp, sb, afcPlayoffs, nfcPlayoffs
 
     def _splitWeek(self, sched):
@@ -468,6 +471,73 @@ def getAllWinners(records, teams):
         if(records[i] == max(records)):
             winners.append(teams[i])
     return winners
+
+def pointFunc(x):
+    return 0.1*(0.92**x)
+
+def getBounds(chance):
+    """Finds the chance that a game ends with different point differences."""
+    leftVals, rightVals = [], []
+    leftNum, rightNum = 0, 0
+    leftBound, rightBound = chance, 1-chance
+    for i in range(1, 26):
+        if(leftNum >= leftBound and rightNum >= rightBound):
+            break
+        leftPerc = pointFunc(i)/2
+        rightPerc = leftPerc
+        leftWall = max(chance-(leftNum+leftPerc), 0)
+        rightWall = min(chance+(rightNum+rightPerc), 1)
+        if(leftNum < leftBound):
+            leftVals.append([leftPerc, leftWall, i])
+        if(rightNum < rightBound):
+            rightVals.append([rightPerc, rightWall, i])
+        leftNum += leftPerc
+        rightNum += rightPerc
+
+    leftVals = scaleBounds(leftNum, leftBound, leftVals)
+    rightVals = scaleBounds(rightNum, rightBound, rightVals)
+    return leftVals, rightVals
+
+def scaleBounds(number, maxNum, values):
+    scalePercs = lambda bound,perc,ratio:bound-((bound-perc)*ratio)
+    if(number < maxNum):
+        ratio = maxNum/(maxNum-values[-1][1])
+        values = [[i[0], scalePercs(maxNum, i[1], ratio), i[2]] for i in values]
+    return values
+
+def getPoints(leftVals, rightVals, chance, home, away):
+    num = random.randint(0, 100)/100
+    if(num < chance):
+        choose = leftVals
+        winner = home
+    else:
+        choose = rightVals
+        winner = away
+    line = choose[-1][-1]
+    for i in choose:
+        if(num > min(chance, i[1]) and num < max(chance, i[1])):
+            line = i[-1]
+            break
+        chance = i[1]
+	
+    return winner, line
+
+def getResult(home, away, line, times=1):
+    winners = []
+    num = float(Base.RATING_AND_INJURY.predict([line]))
+    leftVals, rightVals = getBounds(num)
+    for i in range(times):
+        winners.append(getPoints(leftVals, rightVals, num, home, away))
+
+    winNames = [i[0] for i in winners]
+    winnerName = max(winNames, key=lambda x:winNames.count(x))
+    points, corrects = 0, 0
+    for i in winners:
+        if(i[0] == winnerName):
+            points += i[1]
+            corrects += 1
+
+    return winnerName, int(points/corrects)
 
 def inDivWins(teams, division, sched):
     """Finds the team from a list of teams that had the most wins in the division"""

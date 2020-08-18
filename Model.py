@@ -85,7 +85,7 @@ def accuracy(model, X, Y):
     return score/valSteps
 
 def writeModels(modList):
-    with open('BestModel.pkl', 'wb') as f:
+    with open('NFL_Model/BestModel.pkl', 'wb') as f:
         pickle.dump(modList, f)
 
 def plotAccuracy(trainAcc, valAcc):

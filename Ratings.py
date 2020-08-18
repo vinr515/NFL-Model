@@ -1,4 +1,4 @@
-import nflPredict as Base
+from NFL_Model import nflPredict as Base
 """
 y = (2/2**x)+1 for x > 0,
 y = -x + 2 for x <= 0.

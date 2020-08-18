@@ -1,4 +1,5 @@
-from Update import *
+
+from NFL_Model.Update import *
 from multiprocessing import Pool
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
@@ -89,14 +90,16 @@ def doubleData(data, week=False):
             homeLine = [i[0], i[2]-i[4], i[3]-i[5]]
         injDiff = [i[j]-i[j+12] for j in range(8, 20)]
         homeLine.extend(injDiff)
-        #awayLine = [-j for j in homeLine]
-        #awayLine[0] = homeLine[0]
-        #if(week):
-        #    awayLine[1] = homeLine[1]
+        awayLine = [-j for j in homeLine]
+        awayLine[0] = homeLine[0]
+        if(week):
+            awayLine[1] = homeLine[1]
+        homeLine.insert(1, 1)
+        awayLine.insert(1, 0)
         homeLine.append(i[6])
-        #awayLine.append(1-i[6])
+        awayLine.append(1-i[6])
         newData.append(homeLine)
-        #newData.append(awayLine)
+        newData.append(awayLine)
     return newData
 
 def splitData(data):
@@ -212,29 +215,16 @@ def getSearchLine(model, paramDict):
 
 def oneGo(i):
     Base.RATING_DAMP = i
-    data = getRows()
-    ratingsList = findRatings(data, rating=baseRating)
-    finalData = addRatings(data, ratingsList)
-    finalData = doubleData(finalData, True)
-
-    newTrain, newVal, newTest = splitData(finalData)
-    newTotal = newTrain+newVal
-    random.seed(50)
-    random.shuffle(newTotal)
-    newTrain, newVal = newTotal[:-512], newTotal[-512:]
-    newTrainX, newTrainY = xyData(newTrain)
-    newValX, newValY = xyData(newVal)
-    random.seed()
     
     results = []
     cVals = [.001, .01, .1, 1, 10]
     alphaVals = [1e-7, 1e-5]
     tol = [0.01, 0.001, 0.0001]
     
-    linReg = linear.LinearRegression().fit(newTrainX, newTrainY)
-    pred = linReg.predict(newValX)
-    linearLine = [linReg, score(newValY, pred)/len(newValY)]
-    """
+    linReg = linear.LinearRegression().fit(trainX, trainY)
+    pred = linReg.predict(valX)
+    linearLine = [linReg, score(valY, pred)/len(valY)]
+    
     print('.\nTime: 0')
     print(linearLine)
     ridgeLine = getSearchLine(linear.Ridge(), {'alpha':cVals, 'max_iter':[100, 750]})
@@ -252,8 +242,8 @@ def oneGo(i):
     #svcLine = getSearchLine(SVC(), {'C':cVals, 'kernel':['linear', 'poly', 'rbf', 'sigmoid'],
     #                                 'probability':[True]})
     #print(svcLine)
-    """
-    return [linearLine]#, ridgeLine, logLine, bayLine, forestLine]#, svcLine]
+    
+    return [linearLine, ridgeLine, logLine, bayLine, forestLine]#, svcLine]
     
     """
     for j in modelList:
@@ -271,7 +261,7 @@ def newModel(modelList):
         results.append((reg, valScore, testScore, len(test)))
 
     return results
-
+"""
 baseRating = {'Arizona Cardinals': 496.2, 'Atlanta Falcons': 499.9,
               'Baltimore Ravens': 499.9, 'Buffalo Bills': 503.0,
               'Carolina Panthers': 500.1, 'Chicago Bears': 497.7,
@@ -288,9 +278,10 @@ baseRating = {'Arizona Cardinals': 496.2, 'Atlanta Falcons': 499.9,
               'St. Louis Rams': 504.3, 'Tampa Bay Buccaneers': 500.5,
               'Washington Redskins': 500.2, 'Tennessee Titans': 502.2,
               'Cleveland Browns': 494.4}
+"""
 #modelList = getModelList()
 data = getRows()
-ratingsList = findRatings(data, rating=baseRating)
+ratingsList = findRatings(data)
 finalData = addRatings(data, ratingsList)
 finalData = doubleData(finalData, True)
 train, validate, test = splitData(finalData)

@@ -1,6 +1,6 @@
-import Prediction, Ratings, Train, Injury, Season, Game, Plays
+from NFL_Model import Prediction, Ratings, Train, Injury, Season, Game, Plays
 from bs4 import Comment
-import nflPredict as Base
+from NFL_Model import nflPredict as Base
 
 def divisionWinners(teamData):
     ###Find division winners (not sorted by chance)

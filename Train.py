@@ -1,4 +1,4 @@
-import nflPredict as Base
+from NFL_Model import nflPredict as Base
 
 def getFuture(tableRow):
     """Returns a (away, home, website) tuple, when you don't want the result"""

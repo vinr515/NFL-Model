@@ -1,9 +1,14 @@
-from Update import *
+"""compareModels.py is in the "Running" folder. This folder is used for special
+scripts. Other files like Train, Injury, Prediction, etc. that have methods are
+in the NFL_Model folder.
+This changes the path to the NFL_Model, so the files are organized, but
+can still be run. """
+from NFL_Model.Update import *
 from sklearn.metrics import log_loss, roc_curve, roc_auc_score
 import urllib3
 import concurrent.futures
 import time
-import optimizeAlpha as alpha
+from NFL_Model.Running import optimizeAlpha as alpha
 import pickle
 BeautifulSoup = Base.BeautifulSoup
 plt = Base.plt

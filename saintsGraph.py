@@ -1,4 +1,5 @@
-from Update import *
+
+from NFL_Model.Update import *
 numpy = Base.numpy
 plt = Base.plt
 

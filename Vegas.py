@@ -1,4 +1,4 @@
-import nflPredict as Base
+from NFL_Model import nflPredict as Base
 from bs4 import BeautifulSoup, Comment
 
 comment = lambda text:isinstance(text, Comment)

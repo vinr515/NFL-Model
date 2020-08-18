@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 import time
 print("Bob the Bjgct")
-from Update import *
+from NFL_Model.Update import *
 
 Base.TEAM_ABBRS['Oakland Raiders'] = Base.TEAM_ABBRS['Las Vegas Raiders']
 Base.TEAM_ABBRS['St. Louis Rams'] = Base.TEAM_ABBRS['Los Angeles Rams']

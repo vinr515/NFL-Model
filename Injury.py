@@ -1,4 +1,4 @@
-import nflPredict as Base
+from NFL_Model import nflPredict as Base
 from bs4 import Comment
 
 def findInjuries(team, homeTeam, gameCode, roster=None, starters=None):

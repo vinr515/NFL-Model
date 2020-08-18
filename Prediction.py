@@ -1,5 +1,5 @@
-import Injury
-import nflPredict as Base
+from NFL_Model import Injury
+from NFL_Model import nflPredict as Base
 
 class Prediction:
     """Predicts the score for all games included. gamesList is from

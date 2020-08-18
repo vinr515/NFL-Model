@@ -1,4 +1,4 @@
-import nflPredict as Base
+from NFL_Model import nflPredict as Base
 
 def combineDrives(awayDrives, homeDrives):
     """Combines away team's drives and home team's drives, and sorts by start time
