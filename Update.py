@@ -1,6 +1,10 @@
 from NFL_Model import Prediction, Ratings, Train, Injury, Season, Game, Plays
 from bs4 import Comment
 from NFL_Model import nflPredict as Base
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 def divisionWinners(teamData):
     ###Find division winners (not sorted by chance)

@@ -13,6 +13,10 @@ import optimizeAlpha as alpha
 import seaborn as sns
 import pickle
 from copy import deepcopy
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 LEARNING_RATE = 0.01
 MOMENTUM = 0
@@ -85,7 +89,7 @@ def accuracy(model, X, Y):
     return score/valSteps
 
 def writeModels(modList):
-    with open('NFL_Model/BestModel.pkl', 'wb') as f:
+    with open(folderPath+'NFL_Model/BestModel.pkl', 'wb') as f:
         pickle.dump(modList, f)
 
 def plotAccuracy(trainAcc, valAcc):

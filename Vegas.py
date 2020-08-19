@@ -1,5 +1,9 @@
 from NFL_Model import nflPredict as Base
 from bs4 import BeautifulSoup, Comment
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 comment = lambda text:isinstance(text, Comment)
 def getSpread(gameCode):

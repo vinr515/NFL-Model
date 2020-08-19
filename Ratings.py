@@ -1,4 +1,8 @@
 from NFL_Model import nflPredict as Base
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 """
 y = (2/2**x)+1 for x > 0,
 y = -x + 2 for x <= 0.
@@ -55,7 +59,7 @@ def getChange(oldRatings, newRatings):
 def getOldRatings(year):
     """Returns All-Time Ratings and Season Ratings dictionary at the end of year"""
     ###For Ratings after 2000, they are All-Time and then Season, with a space in the middle
-    with open('gameData/pastRatings.csv', 'r') as f:
+    with open(folderPath+'gameData/pastRatings.csv', 'r') as f:
         pastRatings = f.read().split('\n')[:-1]
 
     order = pastRatings[0].split(',')[1:]
@@ -77,7 +81,7 @@ def getOldRatings(year):
 
 def writeRatings(rate, season):
     """Rewrites TEAM_RATINGS onto nflRatings.csv"""
-    with open('gameData/nflRatings.csv', 'r') as f:
+    with open(folderPath+'gameData/nflRatings.csv', 'r') as f:
         divs = f.read().split('\n')[1:-1]
     ###Get a list of (team, division) tuples, like (Indianapolis Colts, AFC South)
     divs = dict([(i.split(",")[0], i.split(",")[3]) for i in divs])
@@ -93,5 +97,5 @@ def writeRatings(rate, season):
     for i in mapping:
         string += ','.join(i) + '\n'
 
-    with open('gameData/nflRatings.csv', 'w') as f:
+    with open(folderPath+'gameData/nflRatings.csv', 'w') as f:
         f.write(string)

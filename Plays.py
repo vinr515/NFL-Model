@@ -1,6 +1,10 @@
 from NFL_Model import Game
 from NFL_Model import nflPredict as Base
+import os
 Comment = Base.Comment
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 FINAL_DATA_HEAD = ['Home/Away', 'Seconds', 'Down', 'To Go', 'Yard', 'Play Type',
                    'Away Score', 'Home Score', 'Penalty', 'Yards', 'Points']

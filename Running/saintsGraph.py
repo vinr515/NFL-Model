@@ -1,8 +1,11 @@
 
 from NFL_Model.Update import *
+import os
 numpy = Base.numpy
 plt = Base.plt
 
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 def addYear(year, rating):
     newList = []
@@ -36,7 +39,7 @@ def labelSbs(sbList, yVals):
                      arrowprops=dict(facecolor='black',width=0.05,headwidth=5,headlength=5))
         
 
-with open('gameData/newHold.csv', 'r') as f:
+with open(folderPath+'gameData/newHold.csv', 'r') as f:
     gameData = f.read().split('\n')[1:-1]
     gameData = [i.split(',') for i in gameData]
 

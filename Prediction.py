@@ -1,5 +1,9 @@
 from NFL_Model import Injury
 from NFL_Model import nflPredict as Base
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 class Prediction:
     """Predicts the score for all games included. gamesList is from

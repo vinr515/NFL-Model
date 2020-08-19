@@ -1,4 +1,8 @@
 from NFL_Model import nflPredict as Base
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 def combineDrives(awayDrives, homeDrives):
     """Combines away team's drives and home team's drives, and sorts by start time

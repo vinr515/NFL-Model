@@ -18,7 +18,11 @@ import random
 import pickle
 import urllib3
 import requests
+import os
 urllib3.disable_warnings()
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 ###Numbers of times to sim season for season predictions
 SIM_NUM = 2000
@@ -30,7 +34,7 @@ SIM_NUM = 2000
 RATING_DAMP = 20
 
 ###New Machine Learning:
-with open('Regression_Models.pkl', 'rb') as f:
+with open(folderPath+'gameData/Regression_Models.pkl', 'rb') as f:
     RATING_ONLY, RATING_AND_INJURY, IN_GAME, PLAY_TYPE, YARDS_GAINED = pickle.load(f)
 
 PLAY_TYPE_OUT_KEY = ['Field Goal', 'Kickoff', 'Kneel', 'PAT', 'Pass', 'Punt', 'Run',
@@ -56,7 +60,7 @@ START_YEAR = 1922
 
 def getAllRatings():
     """Returns the current ratings for the (32) teams"""
-    with open('gameData/nflRatings.csv', 'r') as f:
+    with open(folderPath+'gameData/nflRatings.csv', 'r') as f:
         ###1 is the heading, -1 is a blank newline
         ratings = f.read().split("\n")[1:-1]
         ratingsDict, seasonDict, divisions, abbrs = {}, {}, {}, {}

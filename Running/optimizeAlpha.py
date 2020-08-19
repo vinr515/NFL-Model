@@ -6,13 +6,17 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 import random
 import time
+import os
 numpy = Base.numpy
 plt = Base.plt
 linear = Base.linear
 MLPClassifier = Base.MLPClassifier
 
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
+
 def getRows():
-    with open('gameData/newHold.csv', 'r') as f:
+    with open(folderPath+'gameData/newHold.csv', 'r') as f:
         DATA = f.read().split('\n')[1:]
         DATA = [i.split(',') for i in DATA]
     return DATA

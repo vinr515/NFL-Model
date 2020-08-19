@@ -2,13 +2,17 @@ from multiprocessing import Pool
 import time
 print("Bob the Bjgct")
 from NFL_Model.Update import *
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 Base.TEAM_ABBRS['Oakland Raiders'] = Base.TEAM_ABBRS['Las Vegas Raiders']
 Base.TEAM_ABBRS['St. Louis Rams'] = Base.TEAM_ABBRS['Los Angeles Rams']
 Base.TEAM_ABBRS['San Diego Chargers'] = Base.TEAM_ABBRS['Los Angeles Chargers']
 
 def getHead():
-    with open('gameData/newHold.csv', 'r') as f:
+    with open(folderPath+'gameData/newHold.csv', 'r') as f:
         HEAD = f.read().split('\n')[0] + '\n'
     return HEAD
 

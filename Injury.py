@@ -1,5 +1,9 @@
 from NFL_Model import nflPredict as Base
 from bs4 import Comment
+import os
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 def findInjuries(team, homeTeam, gameCode, roster=None, starters=None):
     """Finds the injury score of the gameCode game for team

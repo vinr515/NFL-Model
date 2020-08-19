@@ -1,11 +1,10 @@
 from NFL_Model import Ratings, Train
 from NFL_Model import nflPredict as Base
 import random
+import os
 
-print("New point function is {}".format("0.1(0.92^x)"))
-
-AFC_COUNT = 0
-NFC_COUNT = 0
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 class Season:
     """Class to simulate season. startWeek is 0 for preseason. If
@@ -29,6 +28,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###These record what happens in the sim
         self.leagueSched = oldGames
         self.champ, self.inSB, self.wonDiv, self.inPlay = {}, {}, {}, {}
+        self.sbList = {}
         self.winAvg = {}
         self.initResults()
         self._startSeason()
@@ -140,6 +140,9 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###Then [winner, loser] of all the games
         return realData
 
+    def getSuperBowls(self):
+        return self.sbList
+
     def initResults(self):
         """Initialize the results dicts, so they each contain all teams"""
         for i in self.allRate:
@@ -239,12 +242,14 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
                        for i in range(len(allProbs))]
         
         for i in range(len(resultList)):
-            self.leagueSched.append(resultList[i])
+            line = resultList[i] + list(map(str, allProbs[i][2:]))
+            self.leagueSched.append(line)
             self._ratingChange(resultList[i][0], resultList[i][1], allProbs[i][1])
 
     def predictSeason(self):
         """Runs the _simSeason() 2000 times, and updates the season end stats"""
         for i in range(Base.SIM_NUM):
+            random.seed()
             ###The numbers show how much longer it takes
             if(i%100 == 0):
                 print(i, end=' ')
@@ -320,6 +325,10 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         afcName = '. '.join(afcChamp.split('. ')[1:])
         nfcName = '. '.join(nfcChamp.split('. ')[1:])
         sb = [afcName, nfcName]
+        if(tuple(sb) in self.sbList):
+            self.sbList[tuple(sb)] += 1
+        else:
+            self.sbList[tuple(sb)] = 1
         sbChamp = self._sim(afcName, nfcName, homeField=False, sb=True)
         return sbChamp, sb, afcPlayoffs, nfcPlayoffs
 
@@ -537,7 +546,7 @@ def getResult(home, away, line, times=1):
             points += i[1]
             corrects += 1
 
-    return winnerName, int(points/corrects)
+    return winnerName, int(points/corrects), num, home
 
 def inDivWins(teams, division, sched):
     """Finds the team from a list of teams that had the most wins in the division"""

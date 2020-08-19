@@ -10,124 +10,24 @@ import concurrent.futures
 import time
 from NFL_Model.Running import optimizeAlpha as alpha
 import pickle
+import os
 BeautifulSoup = Base.BeautifulSoup
 plt = Base.plt
+
+thisPath = os.path.dirname(__file__)
+folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 
 Base.TEAM_ABBRS['Oakland Raiders'] = Base.TEAM_ABBRS['Las Vegas Raiders']
 Base.TEAM_ABBRS['St. Louis Rams'] = Base.TEAM_ABBRS['Los Angeles Rams']
 Base.TEAM_ABBRS['San Diego Chargers'] = Base.TEAM_ABBRS['Los Angeles Chargers']
 
-with open('BestModel.pkl', 'rb') as f:
+with open(folderPath+'BestModel.pkl', 'rb') as f:
     THIS_MODEL = pickle.load(f)
 
 def getHead():
-    with open('gameData/newHold.csv', 'r') as f:
+    with open(folderPath+'gameData/newHold.csv', 'r') as f:
         HEAD = f.read().split('\n')[0] + '\n'
     return HEAD
-
-"""
-def getYear(i):
-    print("Getting year {}".format(i))
-    year = Train.getYear(i)[:17]
-    rosters = {}
-    text = ""
-    for j in Ratings.getOldRatings(i)[0]:
-        rosters[j] = Injury.getRoster(j, i)
-    print("Finished rosters for year {}".format(i))
-    q = 0
-    for j in year:
-        q+=1
-        for k in j:
-            home, away = k[2], Base.getLoser(k[2], [k[1], k[0]])
-            if(k[2] == k[0]):
-                homeWins = '1'
-            else:
-                homeWins = '0'
-            points = str(k[3])
-            homeInj = list(map(str, Injury.findInjuries(home, 1, k[-1], roster=rosters[home])))
-            awayInj = list(map(str, Injury.findInjuries(away, 0, k[-1], roster=rosters[away])))
-            line = [str(i), home, away, homeWins, points]
-            line.extend(homeInj); line.extend(awayInj)
-            line = ','.join(line) + '\n'
-            text += line
-        print("Year {} Week {}".format(i,q))
-    return text
-
-def getGames(year):
-    with open('gameData/newHold.csv', 'r') as f:
-        allGames = f.read().split('\n')[1:]
-        allGames = [i.split(',') for i in allGames][:-1]
-        allGames = [i for i in allGames if i[0] == str(year)]
-    return allGames
-
-def findRatings(games, year):
-    oldRate = Ratings.getOldRatings(year-1)[0]
-    oldRate = fixRatings(oldRate, year)
-    oldSeas = {}
-
-    gameOrder = []
-    for i in oldRate:
-        oldSeas[i] = 500.0
-
-    for i in range(len(games)):
-        row = games[i]
-        home, away = row[1], row[2]
-        if(row[3] == '1'):
-            win, lose = row[1], row[2]
-        else:
-            win, lose = row[2], row[1]
-
-        homeRate, homeSeas = oldRate[home], oldSeas[home]
-        awayRate, awaySeas = oldRate[away], oldSeas[away]
-        pointRow = [(win, lose, home, int(row[4]), '')]
-        oldRate = Ratings.changeWeekRatings(pointRow, oldRate)
-        oldSeas = Ratings.changeWeekRatings(pointRow, oldSeas)
-
-        row = [homeRate, homeSeas, awayRate, awaySeas] + row[3:]
-        games[i] = row.copy()
-        gameOrder.append([home, away])
-
-    games = [list(map(float, i)) for i in games]
-    return games, gameOrder
-
-def fixRatings(ratings, year):
-    if(year == 2017):
-        ratings['Los Angeles Chargers'] = ratings['San Diego Chargers']
-        del ratings['San Diego Chargers']
-    if(year == 2016):
-        ratings['Los Angeles Rams'] = ratings['St. Louis Rams']
-        del ratings['St. Louis Rams']
-    if(year == 2002):
-        ratings['Houston Texans'] = 500.0
-    return ratings
-
-def ratingValues(games):
-    x = [[i[0]-i[2], i[1]-i[3]] for i in games]
-    y = [i[4] for i in games]
-    return x, y
-
-def injuryValues(games):
-    x = []
-    y = [i[4] for i in games]
-    for i in games:
-        line = [i[0]-i[2], i[1]-i[3]]
-        inj = [i[j]-i[j+12] for j in range(6, 18)]
-        line = line + inj
-        x.append(line)
-
-    return x, y
-
-def compareBase(year):
-    games = findRatings(getGames(year), year)[0]
-    rateX, rateY = ratingValues(games)
-    injX, injY = injuryValues(games)
-    
-    #ratePred = Base.RATING_ONLY.predict_proba(rateX)[:, 1]
-    #injPred = Base.RATING_AND_INJURY.predict(injX)
-    
-    return rateX, rateY, injX, injY
-"""
-
 
 def getYear(year):
     """Returns a list of x and y values for every game in one year"""
