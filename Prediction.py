@@ -1,5 +1,5 @@
-from NFL_Model import Injury
-from NFL_Model import nflPredict as Base
+from . import Injury
+from . import nflPredict as Base
 import os
 
 thisPath = os.path.dirname(__file__)

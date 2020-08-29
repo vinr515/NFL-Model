@@ -1,5 +1,5 @@
 from multiprocessing import Pool
-from NFL_Model.Season import *
+from ..Season import *
 import time
 import os
 

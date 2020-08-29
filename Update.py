@@ -1,6 +1,6 @@
-from NFL_Model import Prediction, Ratings, Train, Injury, Season, Game, Plays
+from . import Prediction, Ratings, Train, Injury, Season, Game, Plays
 from bs4 import Comment
-from NFL_Model import nflPredict as Base
+from . import nflPredict as Base
 import os
 
 thisPath = os.path.dirname(__file__)

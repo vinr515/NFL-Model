@@ -1,5 +1,5 @@
-from NFL_Model import Ratings, Train
-from NFL_Model import nflPredict as Base
+from . import Ratings, Train
+from . import nflPredict as Base
 import random
 import os
 

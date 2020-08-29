@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 import time
 print("Bob the Bjgct")
-from NFL_Model.Update import *
+from ..Update import *
 import os
 
 thisPath = os.path.dirname(__file__)

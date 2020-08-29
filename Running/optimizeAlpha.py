@@ -1,5 +1,5 @@
 
-from NFL_Model.Update import *
+from ..Update import *
 from multiprocessing import Pool
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
