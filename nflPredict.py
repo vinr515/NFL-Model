@@ -155,6 +155,41 @@ def getDivisions(divDict):
 def getLoser(winner, teams):
     return teams[0] if winner == teams[1] else teams[1]
 
+def replace(teams, full=False, rate=None, seas=None):
+    """Replaces a team from all records (but not from the files)
+teams is a dictionary of teams[oldTeam] = newTeam"""
+    for oldTeam in teams:
+        newTeam = teams[oldTeam]
+        if(rate):
+            rate[newTeam] = rate[oldTeam]
+            del rate[oldTeam]
+        else:
+            TEAM_RATINGS[newTeam] = TEAM_RATINGS[oldTeam]
+            del TEAM_RATINGS[oldTeam]
+
+        if(seas):
+            seas[newTeam] = seas[oldTeam]
+            del seas[oldTeam]
+        else:
+            SEASON_RATINGS[newTeam] = SEASON_RATINGS[oldTeam]
+            del SEASON_RATINGS[oldTeam]
+
+        TEAM_ABBRS[newTeam] = TEAM_ABBRS[oldTeam]
+        if(full):
+            replaceConference(oldTeam, newTeam)
+
+def replaceConference(oldTeam, newTeam):
+    if(oldTeam in AFC):
+        AFC[AFC.index(oldTeam)] = newTeam
+    if(oldTeam in NFC):
+        NFC[NFC.index(oldTeam)] = newTeam
+
+    for i in range(len(DIVISIONS)):
+        if(oldTeam in DIVISIONS[i]):
+            DIVISIONS[i][DIVISIONS[i].index(oldTeam)] = newTeam
+
+        
+
 ###Constants about the NFL (and teams)
 teams = getAllRatings()
 TEAM_RATINGS, SEASON_RATINGS = teams[0], teams[1]
