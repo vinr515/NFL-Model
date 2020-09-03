@@ -8,13 +8,14 @@ folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 class Prediction:
     """Predicts the score for all games included. gamesList is from
     getGame()"""
-    def __init__(self, gamesList, year, rate, seas):
+    def __init__(self, gamesList, year, rate, seas, week):
         self.year = year
-        self.rate = rate
-        self.seas = seas
+        self.rate = rate.copy()
+        self.seas = seas.copy()
+        self.week = checkWeek(week, gamesList)
         if(listWorks(gamesList)):
-            self.gamesList = convert(gamesList, year)
-            self.predictions = predictAll(self.gamesList)
+            self.gamesList = convert(gamesList, year, rate, seas)
+            self.predictions = predictAll(self.gamesList, self.week)
         else:
             self.gamesList = [-1]
             self.predictions = [-1]
@@ -30,6 +31,17 @@ class Prediction:
     def getPredictions(self):
         """Returns predictions for games. Use this"""
         return self.predictions
+
+def checkWeek(week, games):
+    if(type(week) == int):
+        return [week for i in range(len(games))]
+    if(len(week) < len(games)):
+        return week + [week[-1] for i in range(len(games)-len(week))]
+    if(len(week) > len(games)):
+        return week[:len(games)]
+    if(len(week) == len(games)):
+        return week
+    raise ValueError("Week should be an integer or list, not {}".format(type(week)))
 
 def convert(gamesList, year, rate, seas):
     """Takes the list of games from nflPredict.Train and only keeps the data
@@ -63,11 +75,13 @@ def listWorks(gamesList):
     return True
 
 
-def predictAll(gameList):
+def predictAll(gameList, week):
     """Finds a list of predictions for all games in gamesList
     Use if the predictions haven't been found yet"""
     predictions = []
     inputData = [i[:-2] for i in gameList]
+    ###It goes [Home, Week, ...]
+    inputData = [[week[i], 1] + inputData[i] for i in range(len(inputData))]
     probs = list(Base.RATING_AND_INJURY.predict(inputData))
     ###Subtract HFA because the predictions are done for the away team
     ###And percentages should add up to 100 (Home+HFA[1], Away-HFA[1])
@@ -81,10 +95,10 @@ def winner(percent, home, away):
     """Takes the number from getResult, and turns it into a team"""
     ###All predictions are done from home's Point of View
     percent = 99.9 if percent > 100 else percent
-    formatPercent = str(round(percent, 1))
+    formatPercent = lambda x:str(round(x, 1))
     ###Use the unformatted percent so a tie is very unlikely
     if(percent > 50):
-        return "{}, {}%".format(home, formatPercent)
+        return "{}, {}%".format(home, formatPercent(percent))
     if(percent < 50):
-        return "{}, {}%".format(away, formatPercent)
+        return "{}, {}%".format(away, formatPercent(100-percent))
     return "Tie between {} and {}".format(home, away)

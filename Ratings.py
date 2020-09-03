@@ -87,8 +87,8 @@ def writeRatings(rate, season):
     divs = dict([(i.split(",")[0], i.split(",")[3]) for i in divs])
     ###Create a mapping that will eventually become a string
     ###nflRatings.csv is sorted by team name, so this should be too
-    mapping = [(i, str(rate[i]), str(season[i]), divs[i], TEAM_ABBRS[i],
-                str(RATE_CHANGE[i]), str(SEAS_CHANGE[i])) for i in sorted(rate)]
+    mapping = [(i, str(rate[i]), str(season[i]), divs[i], Base.TEAM_ABBRS[i],
+                str(Base.RATE_CHANGE[i]), str(Base.SEAS_CHANGE[i])) for i in sorted(rate)]
 
     mapping.insert(0, ('Team', 'Rating', 'Season', 'Division', 'Abbreviation',
                        'Rate Change', 'Season Change'))

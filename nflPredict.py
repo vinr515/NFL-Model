@@ -37,6 +37,15 @@ RATING_DAMP = 20
 with open(folderPath+'gameData/Regression_Models.pkl', 'rb') as f:
     RATING_ONLY, RATING_AND_INJURY, IN_GAME, PLAY_TYPE, YARDS_GAINED = pickle.load(f)
 
+MODEL_IN_KEY = {RATING_ONLY:['All-Time Rating Difference', 'Season Rating Difference'],
+                RATING_AND_INJURY:['Home/Away', 'Week', 'All-Time Difference',
+                                   'Season Difference', 'QB Injury Difference', 'RB', 'WR',
+                                   'TE', 'T', 'G', 'C', 'DT', 'DE', 'LB', 'CB', 'S'],
+                IN_GAME:['All-Time Difference', 'Season Difference', 'Seconds Left', 'Start Yard', 'Point Difference'],
+                PLAY_TYPE:['Home/Away', 'Down', 'To Go', 'Yard', 'Away Points', 'Home Points'],
+                YARDS_GAINED:['Seconds Passed', 'Down', 'To Go', 'Yard', 'Team Score', 'Opponent Score',
+                              'Pass?', 'Run?', 'FG?', 'PAT?', '2PT?']}
+                
 PLAY_TYPE_OUT_KEY = ['Field Goal', 'Kickoff', 'Kneel', 'PAT', 'Pass', 'Punt', 'Run',
                  'Two Point Attempt']
 

@@ -3,6 +3,7 @@ import os
 
 thisPath = os.path.dirname(__file__)
 folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
+Comment = Base.Comment
 
 def combineDrives(awayDrives, homeDrives):
     """Combines away team's drives and home team's drives, and sorts by start time
@@ -125,8 +126,10 @@ def findScores(gameCode):
     return scores, soup
 
 def getAllData(gameCode, awayAbr, homeAbr, homeWin):
-    """Returns final data for all drives in a game
-[Away, Secs, Poss., Yards, Points, Win]"""
+    """Returns final data for all drives in a game. homeWin is 0 or 1
+[Home/Away, Seconds left, Before?, Start Yard, Point Difference, Win?]
+Each drive has two points, before the drive (Before? == 1) and
+after the drive (Before? == 0)"""
     ###Gets the scores in the game
     scores, webSoup = findScores(gameCode)
     ###Gets the stuff for away and home drives
@@ -148,7 +151,7 @@ def getDriveBase(gameCode=None, soup=None):
     awayDrives = soup.find(attrs={"id":"all_vis_drives"})
     homeDrives = soup.find(attrs={"id":"all_home_drives"})
 
-    #return awayDrives, homeDrives
+    return awayDrives, homeDrives
     
 
 def getDrives(drives):

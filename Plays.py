@@ -258,13 +258,16 @@ def getComment(url):
     return soup, tags
 
 def getData(gameCode, awayAbbr, homeAbbr):
-    """Gets data from every play for the gamecode"""
+    """Gets data from every play for the gamecode. Each element has:
+[Home/Away, Seconds Passed, Down, Distance, Yard, Play Type, Away Score, Home Score,
+Penalty?, Yards Gained, Points Gained]"""
     url = 'https://www.pro-football-reference.com' + gameCode
     ###Get the soup object, and all the comments
     soup, tags = getComment(url)
     ###Get all the plays
     entireGame = getAllPlays(tags)
     ###Get all the drives
+    awayAbbr, homeAbbr = awayAbbr.upper(), homeAbbr.upper()
     allDrives, splitPoint = baseDrives(soup, awayAbbr, homeAbbr)
     ###Add a team field for each drive
     allDrives = teamDrives(allDrives, splitPoint)

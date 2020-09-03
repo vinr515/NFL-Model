@@ -18,7 +18,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         self.year = year
         self.sixTeam = sixTeam
 
-        self.records, self.startRecords = records, records
+        self.records, self.startRecords = records.copy(), records.copy()
         ###The ratings it started at, and the ratings to use
         ###self.allRate and seasRate can and will change
         self.ALL_START, self.SEAS_START = allRate.copy(), seasRate.copy()
@@ -353,7 +353,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         self._rewriteRatings()
         ###When starting in the preseason, all  teams have zero wins
         if(self.startWeek == 0):
-            for i in self.allRate:                
+            for i in self.allRate:
                 self.records[i] = 0
         else:
             ###Otherwise, it resets to what was passed when initializing the class
@@ -447,7 +447,12 @@ def divisionWinners(league):
     winners = []
     records = league[0]
     for div in Base.DIVISIONS:
-        divRecs = [records[i] for i in div]
+        try:
+            divRecs = [records[i] for i in div]
+        except KeyError:
+            print(div)
+            print(records)
+            print(5/0)
         if(divRecs.count(max(divRecs)) == 1):
             winners.append(max(div, key=lambda x:records[x]))
         else:

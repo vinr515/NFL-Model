@@ -21,8 +21,7 @@ Base.TEAM_ABBRS['Oakland Raiders'] = Base.TEAM_ABBRS['Las Vegas Raiders']
 Base.TEAM_ABBRS['St. Louis Rams'] = Base.TEAM_ABBRS['Los Angeles Rams']
 Base.TEAM_ABBRS['San Diego Chargers'] = Base.TEAM_ABBRS['Los Angeles Chargers']
 
-with open(folderPath+'BestModel.pkl', 'rb') as f:
-    THIS_MODEL = pickle.load(f)
+THIS_MODEL = Base.RATING_AND_INJURY
 
 def getHead():
     with open(folderPath+'gameData/newHold.csv', 'r') as f:
@@ -32,10 +31,11 @@ def getHead():
 def getYear(year):
     """Returns a list of x and y values for every game in one year"""
     data = alpha.getRows()
-    ratingsList = alpha.findRatings(data, rating=alpha.baseRating)
+    
+    ratingsList = alpha.findRatings(data)
     finalData = alpha.addRatings(data, ratingsList)
     finalData = alpha.doubleData(finalData, True)
-    finalData = [j for j in finalData if j[0] == year]
+    finalData = [j for j in finalData if j[0] == year and j[1] == 1]
 
     finalX, finalY = alpha.xyData(finalData)
     finalX = [j[1:] for j in finalX]
@@ -129,6 +129,9 @@ def rocGraph(year):
     plt.plot(five_fp, five_tp, color='blue', label='FiveThirtyEight')
     plt.plot(rate_fp, rate_tp, color='green', label='This Model')
     plt.legend()
+    plt.title('Comparison of models for the {} season'.format(year))
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
     plt.show()
 
     five, rate = roc_auc_score(outcomes, probs), roc_auc_score(yVals, preds)
