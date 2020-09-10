@@ -1,0 +1,7 @@
+bs4
+sklearn
+urllib3
+torch
+numpy
+matplotlib
+seaborn

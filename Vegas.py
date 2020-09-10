@@ -1,4 +1,4 @@
-from NFL_Model import nflPredict as Base
+from . import nflPredict as Base
 from bs4 import BeautifulSoup, Comment
 import os
 

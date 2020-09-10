@@ -1,5 +1,5 @@
-from NFL_Model import Game
-from NFL_Model import nflPredict as Base
+from . import Game
+from . import nflPredict as Base
 import os
 Comment = Base.Comment
 
