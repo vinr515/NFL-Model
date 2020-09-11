@@ -1,5 +1,6 @@
 from NFL_Model import Injury
 from NFL_Model import nflPredict as Base
+import Season
 import os
 
 thisPath = os.path.dirname(__file__)
@@ -30,7 +31,7 @@ class Prediction:
 
     def getPredictions(self):
         """Returns predictions for games. Use this"""
-        return self.predictions
+        return [winnerString(*i) for i in self.predictions]
 
 def checkWeek(week, games):
     if(type(week) == int):
@@ -83,22 +84,39 @@ def predictAll(gameList, week):
     ###It goes [Home, Week, ...]
     inputData = [[week[i], 1] + inputData[i] for i in range(len(inputData))]
     probs = list(Base.RATING_AND_INJURY.predict(inputData))
-    ###Subtract HFA because the predictions are done for the away team
-    ###And percentages should add up to 100 (Home+HFA[1], Away-HFA[1])
-    probs = [(i*100) for i in probs]
-    
-    winners = [winner(probs[i], gameList[i][-2], gameList[i][-1]) for i in range(len(probs))]
+
+    winners = [getWinner(probs[i], gameList[i][-2], gameList[i][-1]) for i in range(len(probs))]
+    #winners = [winnerString(probs[i], gameList[i][-2], gameList[i][-1]) for i in range(len(probs))]
 
     return winners
 
-def winner(percent, home, away):
-    """Takes the number from getResult, and turns it into a team"""
-    ###All predictions are done from home's Point of View
-    percent = 99.9 if percent > 100 else percent
+def getWinner(percent, home, away):
+    if(percent > .5):
+        return home, percent
+    if(percent < .5):
+        return away, 1-percent
+    return "{} and {}".format(home, away), percent
+
+def winnerString(winner, percent):
+    """Returns a string that says who wins, and by how much"""
+    if(percent == .5):
+        return "Tie between " + winner
+    
     formatPercent = lambda x:str(round(x, 1))
-    ###Use the unformatted percent so a tie is very unlikely
-    if(percent > 50):
-        return "{}, {}%".format(home, formatPercent(percent))
-    if(percent < 50):
-        return "{}, {}%".format(away, formatPercent(100-percent))
-    return "Tie between {} and {}".format(home, away)
+    percentString = str(formatPercent(100*percent))
+    points = pointSpread(percent)
+    return "{}, {}% (by about {} points)".format(winner, percentString, points)
+
+def pointSpread(percent):
+    """Calculates the point spread for a game with a %chance of winning (0-1)"""
+    ###leftBounds is for percent (who in this case won the game)
+    leftBounds, rightBounds = Season.getBounds(percent)
+    ###This is the average of all possible scores, not necessarily the most common
+    halfScore = min(leftBounds, key=lambda x:abs(.5-x[1]))[2]
+    ###Number of scores that are higher than the halfScore
+    numPlus = max(leftBounds, key=lambda x:x[2])[2] - halfScore
+    ###Number of scores that are less than the halfScore
+    numMinus = (halfScore - 1) + len(rightBounds)
+    totalNum = (numPlus - numMinus)/2 + halfScore
+
+    return totalNum

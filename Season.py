@@ -30,6 +30,8 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         self.champ, self.inSB, self.wonDiv, self.inPlay = {}, {}, {}, {}
         self.sbList = {}
         self.winAvg = {}
+        self.afcSeeds = []
+        self.nfcSeeds = []
         self.initResults()
         self._startSeason()
         ###Assigns data to ALL_WEEKS
@@ -219,6 +221,34 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
 
             print("\t" + win + " beat the " + lose)
 
+    def _playoffRound(self, games, sb=False):
+        """Sims a round of the playoffs, adds it to the schedule, and returns
+    the winners"""
+        homeVal = 0.5 if sb else 1
+        
+        diffs = [[self.allRate[i[0]]-self.allRate[i[1]], self.seasRate[i[0]]-self.seasRate[i[1]]]
+                 for i in games]
+        diffs = [[homeVal,17]+i+[0 for j in range(12)] for i in diffs]
+        if(sb):
+            print(games)
+            print(self.allRate[games[0][0]], self.allRate[games[0][1]])
+            print(self.seasRate[games[0][0]], self.seasRate[games[0][1]])
+            print(diffs)
+        probs = [getResult(games[i][0], games[i][1], diffs[i]) for i in range(len(games))]
+        if(sb):
+            print(probs)
+        resultList = []
+
+        for i in range(len(probs)):
+            line = [probs[i][0], Base.getLoser(probs[i][0], games[i][:2])]
+            line.extend([probs[i][3], str(probs[i][2]), str(probs[i][1])])
+            resultList.append(line)
+
+        for i in resultList:
+            self.leagueSched.append(i)
+
+        return [i[0] for i in resultList]
+
     def _postSeason(self, results=False):
         """Finds the two conference champions"""
         league = (self.records, self.leagueSched)
@@ -234,6 +264,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
                  for i in games]
         ###Predict, and add HFA, since it's from Home's POV
         rates = [[1,week]+i+[0 for j in range(12)] for i in rates]
+        ###allProbs is a list of [winner, points, Percent, home]
         allProbs = []
         for i in range(len(rates)):
             allProbs.append(getResult(games[i][1], games[i][0], rates[i]))
@@ -242,9 +273,11 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
                        for i in range(len(allProbs))]
         
         for i in range(len(resultList)):
-            line = resultList[i] + list(map(str, allProbs[i][2:]))
-            self.leagueSched.append(line)
+            holdLine = [allProbs[i][3], str(allProbs[i][2]), str(allProbs[i][1])]
+            line = resultList[i] + holdLine
             self._ratingChange(resultList[i][0], resultList[i][1], allProbs[i][1])
+            self.leagueSched.append(line)
+        
 
     def predictSeason(self):
         """Runs the _simSeason() 2000 times, and updates the season end stats"""
@@ -321,15 +354,16 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###Get conf champions.
         ###Can't use self._postSeason() here because it needs the playoff seeds
         afcPlayoffs, nfcPlayoffs = seeding((self.records, self.leagueSched), self.sixTeam)
+        self.afcSeeds = afcPlayoffs.copy()
+        self.nfcSeeds = nfcPlayoffs.copy()
         afcChamp, nfcChamp = self._toSB(afcPlayoffs), self._toSB(nfcPlayoffs)
-        afcName = '. '.join(afcChamp.split('. ')[1:])
-        nfcName = '. '.join(nfcChamp.split('. ')[1:])
-        sb = [afcName, nfcName]
+        
+        sb = [afcChamp, nfcChamp]
         if(tuple(sb) in self.sbList):
             self.sbList[tuple(sb)] += 1
         else:
             self.sbList[tuple(sb)] = 1
-        sbChamp = self._sim(afcName, nfcName, homeField=False, sb=True)
+        sbChamp = self._playoffRound([sb], sb=True)[0]
         return sbChamp, sb, afcPlayoffs, nfcPlayoffs
 
     def _splitWeek(self, sched):
@@ -359,67 +393,34 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
             ###Otherwise, it resets to what was passed when initializing the class
             self.records = self.startRecords.copy()
 
+        self.afcSeeds, self.nfcSeeds = [], []
+
     def _toSB(self, playoff, sched=False):
         """Returns the conference winner, where playoff is a list of teams in the
 playoffs for one conference, sorted by seed (1 to 6). Returns the results of each game if
 sched = True"""
-        results = []
         ###1, 2 seeds get bye and advance to div round. 1 seed advance with 7 teams
         divRound = [playoff[0], playoff[1]] if self.sixTeam else [playoff[0]]
-
+        
+        games = []
         if(not(self.sixTeam)):
-            ###2v7
-            divRound.append(self._sim(playoff[1], playoff[6], num=1))
+            games.append([playoff[1], playoff[6]])
+            #divRound.append(self._sim(playoff[1], playoff[6], num=1))
         ###Sim 3 vs 6 and 4 vs 5, complete divRound teams
-        divRound.append(self._sim(playoff[2], playoff[5], num=1))
-        divRound.append(self._sim(playoff[3], playoff[4], num=1))
+        games.extend([[playoff[2], playoff[5]], [playoff[3], playoff[4]]])
+        #divRound.append(self._sim(playoff[2], playoff[5], num=1))
+        #divRound.append(self._sim(playoff[3], playoff[4], num=1))
+        divRound.extend(self._playoffRound(games))
 
-        if(not(self.sixTeam)):
-            moreLose = Base.getLoser(divRound[1], [playoff[1], playoff[6]])
-            ###Add seed to the team name. 
-            winName = str(playoff.index(divRound[1])+1) + '. ' + divRound[1]
-            moreLose = str(playoff.index(moreLose)+1) + '. ' + moreLose
-            results.append([winName, moreLose])
-            
-        ###divRound[2] is the 3v6 winner. Find the loser and add to the results
-        firstLose = Base.getLoser(divRound[2], [playoff[2], playoff[5]])
-        secLose = Base.getLoser(divRound[3], [playoff[3], playoff[4]])
-        ###More seeds to the names
-        winName = str(playoff.index(divRound[2])+1) + '. ' + divRound[2]
-        firstLose = str(playoff.index(firstLose)+1) + '. ' + firstLose
-        results.append([winName, firstLose])
-
-        winName = str(playoff.index(divRound[3])+1) + '. ' + divRound[3]
-        secLose = str(playoff.index(secLose)+1) + '. ' + secLose
-        results.append([winName, secLose])
-
-        ###Sort teams by seed so 1 vs lower, 2 vs higher can be set up
-        ###1 seed is first in playoff, so index is 0, and is first in divRound
         divRound = sorted(divRound, key=lambda x:playoff.index(x))
-        lowWin = self._sim(divRound[0], divRound[3], num=1)
-        highWin = self._sim(divRound[1], divRound[2], num=1)
 
-        ###Get losers to add to the list
-        lowLose = Base.getLoser(lowWin, [divRound[0], divRound[3]])
-        highLose = Base.getLoser(highWin, [divRound[1], divRound[2]])
-        ###Seeding
-        lowName = str(playoff.index(lowWin)+1) + '. ' + lowWin
-        lowLose = str(playoff.index(lowLose)+1) + '. ' + lowLose
-        highName = str(playoff.index(highWin)+1) + '. ' + highWin
-        highLose = str(playoff.index(highLose)+1) + '. ' + highLose
-        results.append([lowName, lowLose]); results.append([highName, highLose])
+        games = [[divRound[0], divRound[3]], [divRound[1], divRound[2]]]
 
-        ###Sort remaining teams by seed (for HFA)
-        lowWin, highWin = sorted([lowWin, highWin], key=lambda x:playoff.index(x))
-        champ = self._sim(lowWin, highWin, num=1)
-        runnerUp = Base.getLoser(champ, [lowWin, highWin])
-        ###Seeding
-        champ = str(playoff.index(champ)+1) + '. ' + champ
-        runnerUp = str(playoff.index(runnerUp)+1) + '. ' + runnerUp
-        results.append([champ, runnerUp])
-        if(sched):
-            return champ, results
-        ###Winners play in conference championship, return winner
+        champTeams = self._playoffRound(games)
+
+        games = [sorted(champTeams, key=lambda x:playoff.index(x))]
+        champ = self._playoffRound(games)[0]
+
         return champ
 
 def commonGames(teams, leagueSched):
@@ -487,10 +488,13 @@ def getAllWinners(records, teams):
     return winners
 
 def pointFunc(x):
+    """A function that graphs the frequency of points across NFL Games"""
     return 0.1*(0.92**x)
 
 def getBounds(chance):
-    """Finds the chance that a game ends with different point differences."""
+    """Finds the chance that a game ends with different point differences.
+returns leftVals (for team), and rightVals (for other team). Each bounds is:
+[Individual chance, Sum of chances, Points]"""
     leftVals, rightVals = [], []
     leftNum, rightNum = 0, 0
     leftBound, rightBound = chance, 1-chance
@@ -536,7 +540,7 @@ def getPoints(leftVals, rightVals, chance, home, away):
 	
     return winner, line
 
-def getResult(home, away, line, times=1):
+def getResult(home, away, line, times=10):
     winners = []
     num = float(Base.RATING_AND_INJURY.predict([line]))
     leftVals, rightVals = getBounds(num)
@@ -551,6 +555,8 @@ def getResult(home, away, line, times=1):
             points += i[1]
             corrects += 1
 
+    if(winnerName != home):
+        num = 1-num
     return winnerName, int(points/corrects), num, home
 
 def inDivWins(teams, division, sched):
