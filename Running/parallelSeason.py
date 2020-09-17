@@ -169,7 +169,13 @@ if __name__ == "__main__":
     
     print("%-{}s %8s %8s %8s %8s %8s".format(MAX_LENGTH) % ("Team Name", "Won SB", "Made SB", "Won Div", "Made Playoffs", "Avg Win"))
     for i in results:
-        i = [i[0]] + [str(i[j])+'%' for j in range(1, len(i)-1)] + [i[-1]]
+        i = [i[0]] + [str(round(i[j], 1))+'%' for j in range(1, len(i)-1)] + [round(i[-1], 1)]
         print("%-{}s %8s %8s %8s %8s %8s".format(MAX_LENGTH) % (str(i[0]), str(i[1]), str(i[2]), str(i[3]), str(i[4]), str(i[5])))
 
-    print("\n\n{} Seconds  ".format(new-old))
+    print('\n\n')
+    for i in results:
+        if(i[1] == 0):
+            print("{} has a 0% chance of winning the Super Bowl".format(i[0]))
+        if(i[2] == 0):
+            print("{} has a 0% chance of making the Super Bowl".format(i[0]))
+    print("{} Seconds  ".format(new-old))

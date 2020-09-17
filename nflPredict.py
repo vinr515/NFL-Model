@@ -34,6 +34,8 @@ SIM_NUM = 2000
 RATING_DAMP = 20
 
 ###New Machine Learning:
+###RATING_AND_INJURY takes in:
+###[Home/Away, Week, Rating, Season, 12 Injuries]
 with open(folderPath+'gameData/Regression_Models.pkl', 'rb') as f:
     RATING_ONLY, RATING_AND_INJURY, IN_GAME, PLAY_TYPE, YARDS_GAINED = pickle.load(f)
 
@@ -56,10 +58,11 @@ HFA_VALS = [2, 2.5]
 ###Some uncommon positions are counted as other ones. (NTs are rare, so they're counted as DTs)
 ###This converts. OL is T because G matters less and C matters more, so T is in the middle
 POS_CONVERT = {"FB":"RB", "OL":"T", "DL":"DT", "NT":"DT", "DB":"CB", "SS":"S",
-               "FS":"S", 'RG':'G', 'RT':'T', 'LG':'G', 'LT':'T'}
+               "FS":"S", 'RG':'G', 'RT':'T', 'LG':'G', 'LT':'T', "OT":"T", "OG":"G",
+               "OLB":"LB", "ILB":"LB", "EDGE":"DE"}
 POS_ORDER = ['QB', 'RB', 'WR', 'TE', 'T', 'G', 'C', 'DT', 'DE', 'LB', 'CB', 'S']
 
-severeScore = {'probable': 0.25, 'questionable': 0.5, 'out': 1,
+SEVERE = {'probable': 0.25, 'questionable': 0.5, 'out': 1,
                'doubtful': 0.75, 'i-r': 1}
 
 ###The first year of Ratings in pastRatings.csv

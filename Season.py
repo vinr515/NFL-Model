@@ -96,11 +96,11 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         """Returns a list, with each teams chances, as integers"""
         data = []
         for i in sorted(self.allRate):
-            won = round(self.champ[i]/(Base.SIM_NUM/100), 1)
-            confWon = round(self.inSB[i]/(Base.SIM_NUM/100), 1)
-            divWon = round(self.wonDiv[i]/(Base.SIM_NUM/100), 1)
-            post = round(self.inPlay[i]/(Base.SIM_NUM/100), 1)
-            numWin = round(self.winAvg[i]/Base.SIM_NUM, 1)
+            won = self.champ[i]/(Base.SIM_NUM/100)
+            confWon = self.inSB[i]/(Base.SIM_NUM/100)
+            divWon = self.wonDiv[i]/(Base.SIM_NUM/100)
+            post = self.inPlay[i]/(Base.SIM_NUM/100)
+            numWin = self.winAvg[i]/Base.SIM_NUM
             data.append([i, won, confWon, divWon, post, numWin])
 
         return data

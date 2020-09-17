@@ -1,5 +1,6 @@
 from NFL_Model import nflPredict as Base
-from bs4 import Comment
+from NFL_Model import Train
+from bs4 import Comment, BeautifulSoup
 import os
 
 thisPath = os.path.dirname(__file__)
@@ -10,7 +11,7 @@ def findInjuries(team, homeTeam, gameCode, roster=None, starters=None):
 If roster or starters is given, it will be used, and will take less time
 homeTeam is 0 for away, 1 for home. team is the team name"""
     if(not(starters)):
-        starters = getGameStarters(gameCode)
+        starters = getGamePlayers(gameCode)
         if(type(starters[1]) == str):
             starters = starters[0]
         else:
@@ -67,18 +68,32 @@ def getFuture(game, year):
     awayInj = soup.find("div", attrs={"id":"all_{}_current_injuries".format(awayAbbr)})
     homeInj = soup.find("div", attrs={"id":"all_{}_current_injuries".format(homeAbbr)})
 
-    ###Gets the injuries
-    awayInj, homeInj = getFutInjuries(awayInj), getFutInjuries(homeInj)
+    homeScore = getFutureTeam(homeInj, game[1], year)
+    awayScore = getFutureTeam(awayInj, game[0], year)
     
-    ###[[pos, name], [pos, name], ...] for all starters
-    awayInj, homeInj = getStarters(awayInj, game[0], year), getStarters(homeInj, game[1], year)
-
-    awayInj = [Base.POS_CONVERT[i[0]] for i in awayInj if i[0] in Base.POS_CONVERT]
-    homeInj = [Base.POS_CONVERT[i[0]] for i in homeInj if i[0] in Base.POS_CONVERT]
-    ###Apply the injuryVal function to get a number for each player, then add it
-    awayScore = [awayInj.count(i) for i in Base.POS_ORDER]
-    homeScore = [homeInj.count(i) for i in Base.POS_ORDER]
     return subtract(homeScore, awayScore)
+
+def getFutureTeam(section, name, year):
+    """Gets the future injuries (list of injuries at 12 positions) for one team
+with the div tag from the website"""
+    inj = getFutInjuries(section)
+    inj = getStarters(inj, name, year)
+
+    newInj = [0 for i in Base.POS_ORDER]
+    for i in inj:
+        if(i[0] in Base.POS_CONVERT):
+            index = Base.POS_ORDER.index(Base.POS_CONVERT[i[0]])
+        else:
+            if(not(i[0] in Base.POS_ORDER)):
+                print("{} isn't in POS_ORDER (Name: {})".format(i[0], i[1]))
+                errorFlag = True
+                continue
+            index = Base.POS_ORDER.index(i[0])
+            
+        newInj[index] = newInj[index] + Base.SEVERE[i[2]]
+
+    return newInj
+        
     
 def getFutInjuries(injuries):
     """Returns a list of [name, position] lists of injuries for a future game
@@ -86,22 +101,23 @@ Injuries is a bs4 Tag"""
     ###The actual table is with javascript, so we get it with the comment
     findComment = lambda text:isinstance(text, Comment)
     ###Separate the comment by line
-    comm = str(injuries.find(string=findComment)).split("\n")
-    ###Only keep the ones that have to do with the table (tr, th)
-    comm = [i.split("<") for i in comm if "tr" in i and "th" in i]
-    injuryList = []
-    for i in comm:
-        ###Only href and pos have the name and position
-        ###Adding one means the tag (>) isn't there
-        inj = [j[j.index(">")+1:] for j in i if "href" in j or "pos" in j]
-        injuryList.append(inj)
+    comm = str(injuries.find(string=findComment))
+    newSoup = BeautifulSoup(comm, "html.parser")
 
-    injuryList = [[i[1], i[0]] for i in injuryList]
+    injRows = newSoup.find('table').find_all('tr')
+    injuryList = []
+    for i in injRows:
+        if(i.find('th') and len(i.find_all('td')) == 2):
+            name = i.find('th').text
+            pos = i.find('td').text
+            severe = i.find_all('td')[1].text.lower()
+            injuryList.append([pos, name, severe])
+
     return injuryList
     
-def getGameStarters(url):
-    """Returns a list of (position, name) tuples for the games starters"""
-    rosters = getStarterTags(url)
+def getGamePlayers(url):
+    """Returns a list of (position, name) tuples for the games players"""
+    rosters = getSnapTags(url)
     if(type(rosters[1]) != str):
         awayPlayers, homePlayers = getPlayers(rosters[0]), getPlayers(rosters[1])
         return awayPlayers, homePlayers
@@ -146,14 +162,21 @@ def getRosterUrl(team, year):
 def getStarters(injuries, team, year):
     """Removes all backups from the list of injuries"""
     roster = getRoster(team, year)
-    ###Remove awards and positions from these players. Positions can sometimes
-    ###change, but names won't and there usually aren't repeat names
-    roster = [i[1].replace("*", "").replace("+","") for i in roster]
-    ###Only keeps player in that years roster. i[1] is the name
+    if(roster):
+        ###Remove awards and positions from these players. Positions can sometimes
+        ###change, but names won't and there usually aren't repeat names
+        roster = [i[1].replace("*", "").replace("+","") for i in roster]
+    
+    else:
+        game = [i for i in Train.getWeek(year, 1, True) if team in i][0]
+        index = 1-game.index(team)
+        roster = [i[1] for i in getGameStarters(game[2], index)]
+
+    ###Only keeps the starters who are injured
     starters = [i for i in injuries if i[1] in roster]
     return starters
 
-def getStarterTags(url):
+def getSnapTags(url):
     """Returns a list of tags in the comment with the games starters"""
     soup = Base.openWebsite("https://www.pro-football-reference.com"+url)
     ###The comment is right above the actual tags for the starters
@@ -170,6 +193,26 @@ def getStarterTags(url):
     awayPlayers = removeHeaders(awayRoster)
     homePlayers = removeHeaders(homeRoster)
     return awayPlayers, homePlayers
+
+def getGameStarters(url, home):
+    """Gets the 22 starters for the game. Only for future game injuries, where
+the team doesn't have a roster"""
+    soup = Base.openWebsite("https://www.pro-football-reference.com"+url)
+    if(home): tableName = "all_vis_starters"
+    else: tableName = "all_home_starters"
+
+    starterDiv = soup.find("div", attrs={"id":tableName})
+    findComment = lambda text:isinstance(text, Comment)
+    homeSoup = BeautifulSoup(str(starterDiv.find(string=findComment)), "html.parser")
+
+    players = []
+    for i in homeSoup.find('table').find_all('tr'):
+        if(i.find('th') and i.find('td')):
+            name = i.find('th').text
+            pos = i.find('td').text
+            players.append((pos, name))
+
+    return players
 
 def removeHeaders(splitTags):
     newTags, flag, line = [], False, ''

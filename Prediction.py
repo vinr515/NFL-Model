@@ -15,7 +15,7 @@ class Prediction:
         self.seas = seas.copy()
         self.week = checkWeek(week, gamesList)
         if(listWorks(gamesList)):
-            self.gamesList = convert(gamesList, year, rate, seas)
+            self.gamesList = convert(gamesList, year, self.week, rate, seas)
             self.predictions = predictAll(self.gamesList, self.week)
         else:
             self.gamesList = [-1]
@@ -44,16 +44,17 @@ def checkWeek(week, games):
         return week
     raise ValueError("Week should be an integer or list, not {}".format(type(week)))
 
-def convert(gamesList, year, rate, seas):
+def convert(gamesList, year, week, rate, seas):
     """Takes the list of games from nflPredict.Train and only keeps the data
     It needs ([ratingDiff, season rating diff, injury])"""
     newList = []
     print("Gathering Data ", end='')
-    for i in gamesList:
+    for j in range(len(gamesList)):
+        i = gamesList[j]
         ratingDiff = rate[i[1]] - rate[i[0]]
         seasDiff = seas[i[1]] - seas[i[0]]
         injury = Injury.getFuture(i, year)
-        line = [ratingDiff, seasDiff] + injury + [i[1], i[0]]
+        line = [1, week[j], ratingDiff, seasDiff] + injury + [i[1], i[0]]
         newList.append(line)
         print(".", end='')
 
@@ -82,7 +83,6 @@ def predictAll(gameList, week):
     predictions = []
     inputData = [i[:-2] for i in gameList]
     ###It goes [Home, Week, ...]
-    inputData = [[week[i], 1] + inputData[i] for i in range(len(inputData))]
     probs = list(Base.RATING_AND_INJURY.predict(inputData))
 
     winners = [getWinner(probs[i], gameList[i][-2], gameList[i][-1]) for i in range(len(probs))]
