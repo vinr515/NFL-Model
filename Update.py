@@ -9,7 +9,7 @@ folderPath = thisPath[:thisPath.index("NFL_Model")]+"NFL_Model\\"
 def getWeek(year, week):
     """Gets a list of games for the last and next week, even playoffs"""
     lastWeek = Train.getWeek(year, week)
-    if(weekNum < 17):
+    if(week < 17):
         nextWeek = Train.getWeek(year, week+1, True)
     else:
         nextWeek = Train.getWeek(year, week+14, True)
@@ -83,7 +83,7 @@ def outputBothRankings(year, week):
     """Outputs both the model's rankings, and Massey Rankings, to make it easier
 to compare"""
     massRank = masseyRankings(year, week)
-    teamList = list(Base.SEASON_RAQTINGS.keys())
+    teamList = list(Base.SEASON_RATINGS.keys())
     finalOrder = [[teamList[i], massRank[i][0]] for i in range(len(teamList))]
     finalOrder = sorted(finalOrder, key=lambda x:x[1], reverse=True)
 
@@ -92,10 +92,10 @@ to compare"""
     combineMethod = lambda x:(rateFactor*Base.TEAM_RATINGS[x])+(seasFactor*Base.SEASON_RATINGS[x])
     teamOrder = sorted(Base.TEAM_RATINGS, key=combineMethod, reverse=True)
 
-    print("%-37s %-35s" % ("Massey Rankings", "Model Rankings"))
-    for i in range(1, 33):
-        line = (i, finalOrder[i][0], str(round(finalOrder[i][1], 2)))
-        line = line + (teamOrder[i], combineMethod(teamOrder[i]))
+    print("%-40s %-30s" % ("Massey Rankings", "Model Rankings"))
+    for i in range(32):
+        line = (i+1, finalOrder[i][0], str(round(finalOrder[i][1], 2)))
+        line = line + (teamOrder[i], str(round(combineMethod(teamOrder[i]), 2)))
         print("%-2d: %-30s %-5s %-30s %-5s" % line)
 
     return
@@ -109,9 +109,8 @@ def outputMassey(year, week):
     for i in range(len(finalOrder)):
         print("%-2d: %-30s %-10s".format(i+1) % (i+1, finalOrder[i][0], str(round(finalOrder[i][1], 2))))
     
-def outputPreds(predict):
+def outputPreds(preds):
     """Outputs next weeks predictions, sorted by chance, least to most"""
-    preds = predict.getPredictions()
     ###Gets just the percentage and sorts it
     preds = sorted(preds, key=lambda x:float(x.split(', ')[1][:4]))
     for i in preds:
@@ -132,10 +131,9 @@ def outputPower():
         line = (i+1, team, str(round(combineMethod(team), 1)))
         print("%-2d: %-30s %-7s" % line)
 
-def update(weekNum, year, prevWins):
+def update(weekNum, year):
     """Updates Team Ratings, Playoff Predictions, etc.
-Week Num is the last week played
-prevWins is a dictionary of last weeks win count for each team"""
+Week Num is the last week played"""
     lastWeek, nextWeek = getWeek(year, weekNum)
     ###Step 2: Find Power Rankings
     oldRate, oldSeas  = Base.TEAM_RATINGS.copy(), Base.SEASON_RATINGS.copy()
@@ -151,8 +149,8 @@ prevWins is a dictionary of last weeks win count for each team"""
     ###Step 6: Prediction
     p = Prediction.Prediction(nextWeek, year, Base.TEAM_RATINGS.copy(), Base.SEASON_RATINGS.copy(), weekNum+1)
     preds = p.getPredictions()
+    print('\n')
     outputPreds(preds)
-
+    print('\n')
+    outputBothRankings(year, weekNum)
     Ratings.writeRatings(Base.TEAM_RATINGS, Base.SEASON_RATINGS)
-    outputBothRankings()
-
