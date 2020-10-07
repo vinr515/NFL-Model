@@ -1,33 +1,33 @@
 Team,Rating,Season,Division,Abbreviation,Rate Change,Season Change
-Arizona Cardinals,496.5,500.2,NFC West,crd,0,-8
-Atlanta Falcons,501.1,499.7,NFC South,atl,1,-23
-Baltimore Ravens,510.2,501.2,AFC North,rav,0,2
-Buffalo Bills,498.7,500.3,AFC East,buf,1,1
-Carolina Panthers,495.6,499.8,NFC South,car,-2,-12
-Chicago Bears,501.1,500.2,NFC North,chi,1,-4
-Cincinnati Bengals,494.4,499.8,AFC North,cin,1,-11
-Cleveland Browns,494.4,498.8,AFC North,cle,-1,-24
-Dallas Cowboys,503.0,499.8,NFC East,dal,0,-10
-Denver Broncos,499.0,499.8,AFC West,den,1,-10
-Detroit Lions,498.3,499.8,NFC North,det,0,-10
-Green Bay Packers,501.9,500.2,NFC North,gnb,1,1
-Houston Texans,499.8,499.6,AFC South,htx,0,-18
-Indianapolis Colts,498.8,499.8,AFC South,clt,-1,-8
-Jacksonville Jaguars,496.0,500.2,AFC South,jax,2,3
-Kansas City Chiefs,506.6,500.4,AFC West,kan,0,14
-Las Vegas Raiders,495.1,500.2,AFC West,rai,-1,4
-Los Angeles Chargers,501.1,500.2,AFC West,sdg,1,4
-Los Angeles Rams,503.0,500.2,NFC West,ram,1,4
-Miami Dolphins,493.9,499.7,AFC East,mia,0,-6
-Minnesota Vikings,503.5,499.8,NFC North,min,-1,-2
-New England Patriots,509.1,500.3,AFC East,nwe,0,18
-New Orleans Saints,507.0,500.3,NFC South,nor,0,18
-New York Giants,495.7,499.7,NFC East,nyg,0,-3
-New York Jets,495.5,499.7,AFC East,nyj,0,-3
-Philadelphia Eagles,501.1,499.7,NFC East,phi,-4,-3
-Pittsburgh Steelers,503.0,500.3,AFC North,pit,-1,21
-San Francisco 49ers,502.0,499.8,NFC West,sfo,0,4
-Seattle Seahawks,503.7,500.3,NFC West,sea,1,22
-Tampa Bay Buccaneers,498.6,499.7,NFC South,tam,-1,0
-Tennessee Titans,500.8,500.2,AFC South,oti,0,15
-Washington Football Team,495.5,500.3,NFC East,was,1,24
+Arizona Cardinals,496.7,500.4,NFC West,crd,0,-9
+Atlanta Falcons,500.8,499.5,NFC South,atl,-1,-1
+Baltimore Ravens,509.8,501.2,AFC North,rav,0,0
+Buffalo Bills,499.2,500.6,AFC East,buf,0,2
+Carolina Panthers,495.9,499.6,NFC South,car,3,5
+Chicago Bears,501.4,500.4,NFC North,chi,0,-3
+Cincinnati Bengals,494.3,499.8,AFC North,cin,-1,4
+Cleveland Browns,495.0,499.4,AFC North,cle,3,7
+Dallas Cowboys,503.0,499.7,NFC East,dal,0,-1
+Denver Broncos,498.4,499.1,AFC West,den,-2,-6
+Detroit Lions,498.0,499.4,NFC North,det,0,2
+Green Bay Packers,502.7,501.0,NFC North,gnb,0,-2
+Houston Texans,499.6,499.1,AFC South,htx,-1,-1
+Indianapolis Colts,500.3,501.2,AFC South,clt,1,11
+Jacksonville Jaguars,495.3,499.5,AFC South,jax,-2,-6
+Kansas City Chiefs,507.2,500.9,AFC West,kan,0,0
+Las Vegas Raiders,495.8,500.1,AFC West,rai,0,-9
+Los Angeles Chargers,500.5,499.9,AFC West,sdg,-2,-3
+Los Angeles Rams,503.0,500.5,NFC West,ram,-2,-7
+Miami Dolphins,494.4,500.1,AFC East,mia,1,8
+Minnesota Vikings,502.6,499.3,NFC North,min,-2,-1
+New England Patriots,508.8,500.5,AFC East,nwe,0,4
+New Orleans Saints,505.8,499.8,NFC South,nor,0,-1
+New York Giants,495.0,498.7,NFC East,nyg,-2,-6
+New York Jets,494.5,498.2,AFC East,nyj,-2,-2
+Philadelphia Eagles,500.8,499.4,NFC East,phi,1,4
+Pittsburgh Steelers,503.2,500.6,AFC North,pit,2,-1
+San Francisco 49ers,502.8,501.2,NFC West,sfo,2,9
+Seattle Seahawks,504.2,500.7,NFC West,sea,0,2
+Tampa Bay Buccaneers,499.3,500.6,NFC South,tam,2,7
+Tennessee Titans,501.1,500.5,AFC South,oti,2,-2
+Washington Football Team,494.8,499.5,NFC East,was,0,-4

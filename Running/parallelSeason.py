@@ -106,23 +106,36 @@ def outputDiv(div, playoffs, winDict):
 #rate, seas = replaceTeams(rate, seas, 'Oakland Raiders', 'Las Vegas Raiders', 'Washington Redskins', 'Washington Football Team')
 #for i in seas:
 #    seas[i] = 500.0
-Base.replace({'Washington Redskins':'Washington Football Team'}, full=True,
-             rate = Base.TEAM_RATINGS, seas = Base.SEASON_RATINGS)
+#Base.replace({'Washington Redskins':'Washington Football Team'}, full=True,
+#             rate = Base.TEAM_RATINGS, seas = Base.SEASON_RATINGS)
 Base.SIM_NUM = 5000
 MAX_LENGTH = 30#len(max(rate, key=lambda x:len(x)))
 
 PREDICT_YEAR = 2020
+LAST_WEEK_NUM = 3
 
 if __name__ == "__main__":
     old = time.time()
-    s = Season(0, PREDICT_YEAR, Base.TEAM_RATINGS, Base.SEASON_RATINGS)
+    winDict = {}
+    for i in Base.TEAM_RATINGS:
+        winDict[i] = 0
+    oldGames = []
+    weekRange = range(1, LAST_WEEK_NUM+1)
+    for i in weekRange:
+        thisWeek = Train.getWeek(2020, i)
+        oldGames.extend([[j[0], j[1], j[2], '.5', str(j[3])] for j in thisWeek])
+        for j in thisWeek:
+            winDict[j[0]] += 1
+
+    s = Season(LAST_WEEK_NUM, PREDICT_YEAR, Base.TEAM_RATINGS, Base.SEASON_RATINGS,
+               oldGames=oldGames.copy())
     
     with Pool(2) as p:
         #results = p.map(schedule, [s])[0]
         results = p.map(chances, [s])[0]
 
     new = time.time()
-
+    ###Put docstring below this line
     """
     sched, afcSeeds, nfcSeeds = results
     regSched, postSched, sbSched = sched[:256], sched[256:-1], sched[-1:]
@@ -165,8 +178,8 @@ if __name__ == "__main__":
 
     print("\nRegular Season Standings")
     outputWins(afcSeeds, nfcSeeds, winDict)
-    """
     
+    """
     print("%-{}s %8s %8s %8s %8s %8s".format(MAX_LENGTH) % ("Team Name", "Won SB", "Made SB", "Won Div", "Made Playoffs", "Avg Win"))
     for i in results:
         i = [i[0]] + [str(round(i[j], 1))+'%' for j in range(1, len(i)-1)] + [round(i[-1], 1)]
@@ -175,7 +188,8 @@ if __name__ == "__main__":
     print('\n\n')
     for i in results:
         if(i[1] == 0):
-            print("{} has a 0% chance of winning the Super Bowl".format(i[0]))
+            print("{} won the Super Bowl less than once in {} runs".format(i[0], Base.SIM_NUM))
         if(i[2] == 0):
-            print("{} has a 0% chance of making the Super Bowl".format(i[0]))
+            print("{} made the Super Bowl less than once in {} runs".format(i[0], Base.SIM_NUM))
+    
     print("{} Seconds  ".format(new-old))

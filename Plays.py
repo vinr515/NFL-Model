@@ -1,6 +1,7 @@
 from NFL_Model import Game
 from NFL_Model import nflPredict as Base
 import os
+from bs4 import BeautifulSoup
 Comment = Base.Comment
 
 thisPath = os.path.dirname(__file__)
@@ -68,6 +69,8 @@ def changeDriveYard(drives, abbr, notAbbr):
         elif(notAbbr in drives[i][3]):
             yard = 100-int(drives[i][3][notIndex:])
             drives[i][3] = str(yard)
+        elif('50' in drives[i][3]):
+            drives[i][3] = "50"
         else:
             given = '(%s, %s)' % (abbr, notAbbr)
             real = drives[i][3]
@@ -224,8 +227,18 @@ def formatTime(time):
     seconds = left%60
     return "Quarter %d %d:%02d" % (quarter, minutes, seconds)
 
-def getAllPlays(tags):
+def getAllPlays(commSoup):
     """Gets every play from the game, with a list of tags"""
+    table = commSoup.find('table', attrs={'id':'pbp'}).find('tbody')
+    playRows = [i for i in table.find_all('tr') if len(i.find_all('td')) > 1]
+
+    playData = []
+    for i in playRows:
+        combCells = i.find_all('th')+i.find_all('td')
+        playData.append([j.text for j in combCells])
+
+    return playData
+    """
     entireGame = []
     flag = False
     for i in tags:
@@ -247,6 +260,7 @@ def getAllPlays(tags):
             entireGame.append(thisPlay)
 
     return entireGame
+    """
 
 def getComment(url):
     soup = Base.openWebsite(url)
@@ -254,8 +268,8 @@ def getComment(url):
     findComment = lambda text:isinstance(text, Comment)
     playByPlay = soup.find('div', attrs={'id':'all_pbp'})
 
-    tags = str(playByPlay.find(string=findComment)).split('\n')
-    return soup, tags
+    commSoup = BeautifulSoup(str(playByPlay.find(string=findComment)), "html.parser")
+    return soup, commSoup
 
 def getData(gameCode, awayAbbr, homeAbbr):
     """Gets data from every play for the gamecode. Each element has:
@@ -263,9 +277,9 @@ def getData(gameCode, awayAbbr, homeAbbr):
 Penalty?, Yards Gained, Points Gained]"""
     url = 'https://www.pro-football-reference.com' + gameCode
     ###Get the soup object, and all the comments
-    soup, tags = getComment(url)
+    soup, commSoup = getComment(url)
     ###Get all the plays
-    entireGame = getAllPlays(tags)
+    entireGame = getAllPlays(commSoup)
     ###Get all the drives
     awayAbbr, homeAbbr = awayAbbr.upper(), homeAbbr.upper()
     allDrives, splitPoint = baseDrives(soup, awayAbbr, homeAbbr)

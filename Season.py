@@ -11,14 +11,14 @@ class Season:
 startWeek > 0, records is a dictionary with Team Name, number of wins pairs.
 games is the list of games to sim, oldGames is a list of games played.
 sixTeam=True for a six/12 team playoff, else seven/14"""
-    def __init__(self, startWeek, year, allRate, seasRate, records={},
+    def __init__(self, startWeek, year, allRate, seasRate,
                  searchFor={}, games=[], oldGames=[], sixTeam=False):
         self.searchFor = searchFor
         self.startWeek = startWeek
         self.year = year
         self.sixTeam = sixTeam
 
-        self.records, self.startRecords = records.copy(), records.copy()
+        self.records, self.startRecords = {}, {}
         ###The ratings it started at, and the ratings to use
         ###self.allRate and seasRate can and will change
         self.ALL_START, self.SEAS_START = allRate.copy(), seasRate.copy()
@@ -229,14 +229,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         diffs = [[self.allRate[i[0]]-self.allRate[i[1]], self.seasRate[i[0]]-self.seasRate[i[1]]]
                  for i in games]
         diffs = [[homeVal,17]+i+[0 for j in range(12)] for i in diffs]
-        if(sb):
-            print(games)
-            print(self.allRate[games[0][0]], self.allRate[games[0][1]])
-            print(self.seasRate[games[0][0]], self.seasRate[games[0][1]])
-            print(diffs)
         probs = [getResult(games[i][0], games[i][1], diffs[i]) for i in range(len(games))]
-        if(sb):
-            print(probs)
         resultList = []
 
         for i in range(len(probs)):
@@ -318,7 +311,6 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         for i in range(self.startWeek, 17):
             ###predictRating add them to the list anyway
             week = self.ALL_WEEKS[i-self.startWeek]
-            
             self._predictRating(week, i+1)
 
     def _rewriteRatings(self):
@@ -351,6 +343,7 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###Update records/wins dict
         for i in self.leagueSched:
             self.records[i[0]] += 1
+
         ###Get conf champions.
         ###Can't use self._postSeason() here because it needs the playoff seeds
         afcPlayoffs, nfcPlayoffs = seeding((self.records, self.leagueSched), self.sixTeam)
@@ -386,12 +379,8 @@ sixTeam=True for a six/12 team playoff, else seven/14"""
         ###Use original ratings for the season. It will change through the season
         self._rewriteRatings()
         ###When starting in the preseason, all  teams have zero wins
-        if(self.startWeek == 0):
-            for i in self.allRate:
-                self.records[i] = 0
-        else:
-            ###Otherwise, it resets to what was passed when initializing the class
-            self.records = self.startRecords.copy()
+        for i in self.allRate:
+            self.records[i] = 0
 
         self.afcSeeds, self.nfcSeeds = [], []
 
@@ -575,7 +564,7 @@ def inDivWins(teams, division, sched):
 def loadGames(startWeek, year):
     """Loads all games except startWeek"""
     print("Loading Game Data (~30s) ", end='')
-    allWeeks = Train.getYear(year, True)
+    allWeeks = Train.getYear(year, True)[startWeek:]
     print()
     return allWeeks
 
