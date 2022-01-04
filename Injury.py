@@ -65,8 +65,8 @@ def getFuture(game, year):
     soup = Base.openWebsite(url)
     
     awayAbbr, homeAbbr = Base.TEAM_ABBRS[game[0]], Base.TEAM_ABBRS[game[1]]
-    awayInj = soup.find("div", attrs={"id":"all_{}_current_injuries".format(awayAbbr)})
-    homeInj = soup.find("div", attrs={"id":"all_{}_current_injuries".format(homeAbbr)})
+    awayInj = soup.find("div", attrs={"id":"all_{}_injury_report".format(awayAbbr)})
+    homeInj = soup.find("div", attrs={"id":"all_{}_injury_report".format(homeAbbr)})
 
     homeScore = getFutureTeam(homeInj, game[1], year)
     awayScore = getFutureTeam(awayInj, game[0], year)
@@ -89,7 +89,7 @@ with the div tag from the website"""
                 errorFlag = True
                 continue
             index = Base.POS_ORDER.index(i[0])
-            
+
         newInj[index] = newInj[index] + Base.SEVERE[i[2]]
 
     return newInj
@@ -107,10 +107,12 @@ Injuries is a bs4 Tag"""
     injRows = newSoup.find('table').find_all('tr')
     injuryList = []
     for i in injRows:
-        if(i.find('th') and len(i.find_all('td')) == 2):
+        if(i.find('th') and (i.find('th').text.lower().strip() != 'player')): #len(i.find_all('td')) == 2):
             name = i.find('th').text
             pos = i.find('td').text
-            severe = i.find_all('td')[1].text.lower()
+            severe = i.find_all('td')[2].text.lower()
+            if(severe == ''):
+                severe = i.find_all('td')[1].text.lower()
             injuryList.append([pos, name, severe])
 
     return injuryList

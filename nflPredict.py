@@ -62,8 +62,8 @@ POS_CONVERT = {"FB":"RB", "OL":"T", "DL":"DT", "NT":"DT", "DB":"CB", "SS":"S",
                "OLB":"LB", "ILB":"LB", "EDGE":"DE"}
 POS_ORDER = ['QB', 'RB', 'WR', 'TE', 'T', 'G', 'C', 'DT', 'DE', 'LB', 'CB', 'S']
 
-SEVERE = {'probable': 0.25, 'questionable': 0.5, 'out': 1,
-               'doubtful': 0.75, 'i-r': 1}
+SEVERE = {'full': 0, 'probable': 0.25, 'questionable': 0.5, 'limited': 0.5,
+          'out': 1,  'doubtful': 0.75, 'i-r': 1, 'injured reserve': 1, 'dnp':1}
 
 ###The first year of Ratings in pastRatings.csv
 ###Chosen because it was the first year that didn't have a bunch of 1 year teams
